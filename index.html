@@ -1,0 +1,1471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bright Spark Aptitude Simulator</title>
+  <style>
+:root {
+  --bg: #f5f5f0; --surface: #fff; --border: #d0d0cc;
+  --text: #1a1a1a; --muted: #666; --accent: #2563eb;
+  --correct: #16a34a; --incorrect: #dc2626; --flagged: #d97706;
+  --radius: 8px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+       background: var(--bg); color: var(--text); font-size: 16px; }
+.screen { min-height: 100vh; padding: 1rem; }
+.container { max-width: 720px; margin: 0 auto; }
+.btn { display: inline-block; padding: 0.75rem 1.5rem; border-radius: var(--radius);
+       border: none; cursor: pointer; font-size: 1rem; font-weight: 600; }
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-ghost { background: transparent; border: 2px solid var(--border); color: var(--text); }
+.btn-danger { background: var(--incorrect); color: #fff; }
+.option-btn { display: block; width: 100%; text-align: left;
+              padding: 0.85rem 1.2rem; margin-bottom: 0.5rem; min-height: 44px;
+              border: 2px solid var(--border); border-radius: var(--radius);
+              background: var(--surface); cursor: pointer; font-size: 1rem; }
+.option-btn:hover:not(:disabled) { border-color: var(--accent); }
+.option-btn.selected { border-color: var(--accent); background: #eff6ff; }
+.option-btn.correct { border-color: var(--correct); background: #f0fdf4; }
+.option-btn.incorrect { border-color: var(--incorrect); background: #fef2f2; }
+.option-btn:disabled { cursor: default; }
+.timer { font-size: 1.5rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.timer.urgent { color: var(--incorrect); animation: pulse 1s infinite; }
+@keyframes pulse { 50% { opacity: 0.5; } }
+.progress-bar { height: 4px; background: var(--border); border-radius: 2px; margin: 0.5rem 0; }
+.progress-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.3s; }
+.grid-cell { width: 2.5rem; height: 2.5rem; border-radius: 4px; border: 2px solid var(--border);
+             cursor: pointer; font-weight: 700; font-size: 0.85rem; background: var(--surface); }
+.grid-cell.correct { background: var(--correct); color: #fff; border-color: var(--correct); }
+.grid-cell.incorrect { background: var(--incorrect); color: #fff; border-color: var(--incorrect); }
+.grid-cell.unanswered { background: #e5e5e0; }
+.grid-cell.flagged { outline: 3px solid var(--flagged); outline-offset: 1px; }
+.feedback-box { margin-top: 1rem; padding: 1rem; border-radius: var(--radius);
+                border-left: 4px solid var(--correct); background: #f0fdf4; }
+.feedback-box.wrong { border-color: var(--incorrect); background: #fef2f2; }
+.solution-card { background: var(--surface); border-radius: var(--radius);
+                 border: 1px solid var(--border); padding: 1.25rem; margin-bottom: 1rem; }
+.solution-card.correct { border-left: 4px solid var(--correct); }
+.solution-card.incorrect { border-left: 4px solid var(--incorrect); }
+.score-card { background: var(--surface); border-radius: var(--radius); padding: 1.25rem;
+              border: 1px solid var(--border); margin-bottom: 1rem; }
+.band-strong { color: var(--correct); font-weight: 700; }
+.band-solid { color: var(--accent); font-weight: 700; }
+.band-low { color: var(--incorrect); font-weight: 700; }
+svg text { font-family: -apple-system, sans-serif; }
+.abs-options-grid { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.5rem; }
+.abs-option-btn { border: 2px solid var(--border); border-radius: var(--radius);
+                  background: var(--surface); cursor: pointer; padding: 4px;
+                  display: inline-flex; align-items: center; justify-content: center; min-width: 90px; min-height: 90px; }
+.abs-option-btn:hover:not(:disabled) { border-color: var(--accent); }
+.abs-option-btn.selected { border-color: var(--accent); background: #eff6ff; }
+.abs-option-btn.correct { border-color: var(--correct); background: #f0fdf4; }
+.abs-option-btn.incorrect { border-color: var(--incorrect); background: #fef2f2; }
+.abs-option-btn:disabled { cursor: default; }
+.seq-display { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.seq-item { text-align: center; }
+.seq-label { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+.question-header { display: flex; justify-content: space-between; align-items: center;
+                   padding: 0.75rem 1rem; background: var(--surface); border-bottom: 1px solid var(--border);
+                   position: sticky; top: 0; z-index: 10; }
+.module-label { font-weight: 700; font-size: 0.9rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+.q-counter { font-weight: 600; }
+.nav-row { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem; }
+.flag-btn { background: transparent; border: 2px solid var(--border); border-radius: var(--radius);
+            padding: 0.5rem 1rem; cursor: pointer; font-size: 0.9rem; font-weight: 600; }
+.flag-btn.flagged { border-color: var(--flagged); color: var(--flagged); background: #fffbeb; }
+.home-card { background: var(--surface); border-radius: var(--radius); padding: 1.5rem;
+             border: 1px solid var(--border); margin-bottom: 1rem; }
+.module-select-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin: 1rem 0; }
+.module-toggle { display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1rem;
+                 border: 2px solid var(--border); border-radius: var(--radius); cursor: pointer;
+                 background: var(--surface); font-weight: 600; }
+.module-toggle.active { border-color: var(--accent); background: #eff6ff; color: var(--accent); }
+.mode-row { display: flex; gap: 1rem; margin: 1rem 0; }
+.mode-btn { flex: 1; padding: 0.75rem; border: 2px solid var(--border); border-radius: var(--radius);
+            background: var(--surface); cursor: pointer; font-weight: 600; text-align: center; }
+.mode-btn.active { border-color: var(--accent); background: #eff6ff; color: var(--accent); }
+.review-grid { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 1rem 0; }
+.section-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 0.75rem; }
+.results-overall { background: var(--accent); color: #fff; border-radius: var(--radius);
+                   padding: 1.5rem; text-align: center; margin-bottom: 1.5rem; }
+.results-overall h2 { font-size: 2rem; }
+.tag { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 4px;
+       font-size: 0.8rem; font-weight: 700; background: #e5e5e0; color: var(--text); }
+.tag.correct { background: #dcfce7; color: var(--correct); }
+.tag.incorrect { background: #fee2e2; color: var(--incorrect); }
+hr { border: none; border-top: 1px solid var(--border); margin: 1rem 0; }
+p { margin-bottom: 0.5rem; line-height: 1.6; }
+h1 { font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; }
+h2 { font-size: 1.4rem; font-weight: 700; margin-bottom: 0.5rem; }
+h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem; }
+table { border-collapse: collapse; width: 100%; margin: 0.75rem 0; font-size: 0.95rem; }
+th, td { border: 1px solid var(--border); padding: 0.5rem 0.75rem; }
+th { background: #f0f0eb; font-weight: 700; }
+.checkbox-row { display: flex; align-items: center; gap: 0.5rem; margin: 0.5rem 0; cursor: pointer; }
+.solutions-section { margin-top: 2rem; }
+@media (max-width: 480px) {
+  .timer { font-size: 1.2rem; }
+  .option-btn { font-size: 0.95rem; }
+  h1 { font-size: 1.5rem; }
+  .module-select-grid { grid-template-columns: 1fr; }
+}
+  </style>
+</head>
+<body>
+  <div id="screen-home" class="screen"></div>
+  <div id="screen-question" class="screen" style="display:none"></div>
+  <div id="screen-review" class="screen" style="display:none"></div>
+  <div id="screen-results" class="screen" style="display:none"></div>
+
+<script>
+// ============================================================
+// SECTION 1: DATA / GENERATORS
+// ============================================================
+
+function lcg(seed) {
+  let s = seed >>> 0;
+  return () => { s = (Math.imul(1664525, s) + 1013904223) >>> 0; return s / 0x100000000; };
+}
+
+function makeDistractors(correctVal, errorFns, fmt) {
+  const wrongs = [];
+  for (const fn of errorFns) {
+    const w = fn();
+    if (w !== correctVal && !wrongs.includes(w)) wrongs.push(w);
+    if (wrongs.length === 3) break;
+  }
+  while (wrongs.length < 3) {
+    let candidate = correctVal + wrongs.length + 1;
+    while (wrongs.includes(candidate) || candidate === correctVal) candidate++;
+    wrongs.push(candidate);
+  }
+  const pool = [correctVal, ...wrongs].map(v => fmt ? fmt(v) : String(v));
+  let ci = 0;
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+    if (j === ci) ci = i; else if (i === ci) ci = j;
+  }
+  return { options: pool, correct: ci };
+}
+
+function gcd(a, b) { return b === 0 ? a : gcd(b, a % b); }
+function lcmVal(a, b) { return (a * b) / gcd(a, b); }
+function simplifyFrac(n, d) { const g = gcd(Math.abs(n), Math.abs(d)); return [n/g, d/g]; }
+function fracStr(n, d) { const [sn, sd] = simplifyFrac(n, d); return sd === 1 ? String(sn) : `${sn}/${sd}`; }
+
+// ---- 1C. Numeracy Generators ----
+
+function genArithmetic(idx, rng) {
+  const ops = ['+', '-', '×', '÷'];
+  const op = ops[Math.floor(rng() * 4)];
+  let a, b, correct, explanation;
+  if (op === '+') {
+    a = Math.floor(rng() * 90) + 10;
+    b = Math.floor(rng() * 90) + 10;
+    correct = a + b;
+    explanation = `${a} + ${b} = ${correct}`;
+  } else if (op === '-') {
+    b = Math.floor(rng() * 90) + 10;
+    a = b + Math.floor(rng() * 90) + 10;
+    correct = a - b;
+    explanation = `${a} - ${b} = ${correct}`;
+  } else if (op === '×') {
+    a = Math.floor(rng() * 11) + 2;
+    b = Math.floor(rng() * 11) + 2;
+    correct = a * b;
+    explanation = `${a} × ${b} = ${correct}`;
+  } else {
+    b = Math.floor(rng() * 11) + 2;
+    const q = Math.floor(rng() * 11) + 2;
+    a = b * q;
+    correct = q;
+    explanation = `${a} ÷ ${b} = ${correct}`;
+  }
+  const errFns = op === '+' || op === '-'
+    ? [() => a - b, () => a + b + 1, () => correct + 10]
+    : op === '×'
+      ? [() => a + b, () => a - b, () => correct + a]
+      : [() => a * b, () => b, () => correct + 1];
+  const { options, correct: ci } = makeDistractors(correct, errFns, String);
+  return {
+    id: `num_${String(idx+1).padStart(2,'0')}`, module: 'numeracy', type: 'mcq',
+    prompt: `<p>Calculate: <strong>${a} ${op} ${b}</strong></p>`,
+    options, correct: ci,
+    explanation: `<p>${explanation}</p>`, svg: null
+  };
+}
+
+function genFraction(idx, rng) {
+  const denoms = [2,3,4,5,6,8,10];
+  const d1 = denoms[Math.floor(rng() * denoms.length)];
+  let d2 = denoms[Math.floor(rng() * denoms.length)];
+  while (d2 === d1) d2 = denoms[Math.floor(rng() * denoms.length)];
+  const n1 = Math.floor(rng() * (d1 - 1)) + 1;
+  const n2 = Math.floor(rng() * (d2 - 1)) + 1;
+  const lcd = lcmVal(d1, d2);
+  const resN = n1 * (lcd / d1) + n2 * (lcd / d2);
+  const ans = fracStr(resN, lcd);
+  const { options, correct: ci } = makeDistractors(ans,
+    [() => fracStr(n1 + n2, d1 + d2), () => fracStr(n1 * (lcd/d1) + n2 * (lcd/d2) + 1, lcd), () => fracStr(n1 * n2, d1 * d2)],
+    v => v
+  );
+  return {
+    id: `num_${String(idx+1).padStart(2,'0')}`, module: 'numeracy', type: 'mcq',
+    prompt: `<p>Calculate: <strong>${n1}/${d1} + ${n2}/${d2}</strong></p>`,
+    options, correct: ci,
+    explanation: `<p>LCD of ${d1} and ${d2} is ${lcd}. Convert: ${n1}/${d1} = ${n1*(lcd/d1)}/${lcd}, ${n2}/${d2} = ${n2*(lcd/d2)}/${lcd}. Sum = ${resN}/${lcd} = <strong>${ans}</strong></p>`,
+    svg: null
+  };
+}
+
+function genDecimal(idx, rng) {
+  const factors = [10, 100, 1000];
+  const factor = factors[Math.floor(rng() * 3)];
+  const isMultiply = rng() > 0.5;
+  const dp = rng() > 0.5 ? 1 : 2;
+  const base = Math.round((rng() * 9 + 1) * Math.pow(10, dp)) / Math.pow(10, dp);
+  let a, op, correct;
+  if (isMultiply) { a = base; op = '×'; correct = Math.round(a * factor * 1000) / 1000; }
+  else { a = Math.round(base * factor * 100) / 100; op = '÷'; correct = Math.round(a / factor * 10000) / 10000; }
+  const correctStr = String(correct);
+  const { options, correct: ci } = makeDistractors(correctStr,
+    [() => String(isMultiply ? a * (factor * 10) : a / (factor * 10)),
+     () => String(isMultiply ? a / factor : a * factor),
+     () => String(isMultiply ? a * (factor / 10) : a / (factor / 10))],
+    v => v
+  );
+  return {
+    id: `num_${String(idx+1).padStart(2,'0')}`, module: 'numeracy', type: 'mcq',
+    prompt: `<p>Calculate: <strong>${a} ${op} ${factor}</strong></p>`,
+    options, correct: ci,
+    explanation: `<p>Moving the decimal point ${Math.log10(factor)} place(s) to the ${isMultiply ? 'right' : 'left'}: ${a} ${op} ${factor} = <strong>${correct}</strong></p>`,
+    svg: null
+  };
+}
+
+function genPercentage(idx, rng) {
+  const subtype = Math.floor(rng() * 3);
+  let prompt, correct, explanation, errFns;
+  if (subtype === 0) {
+    const pcts = [5,10,15,20,25,30,40,50,75];
+    const pct = pcts[Math.floor(rng() * pcts.length)];
+    const base = (Math.floor(rng() * 9) + 2) * 10;
+    correct = Math.round(pct / 100 * base);
+    prompt = `<p>What is <strong>${pct}%</strong> of <strong>${base}</strong>?</p>`;
+    explanation = `<p>${pct}% of ${base} = (${pct} ÷ 100) × ${base} = <strong>${correct}</strong></p>`;
+    errFns = [() => Math.round(pct * base), () => Math.round(pct / 100 * base) + 10, () => Math.round((100 - pct) / 100 * base)];
+  } else if (subtype === 1) {
+    const base = (Math.floor(rng() * 9) + 2) * 10;
+    const divisors = [2,4,5,10,20,25,50];
+    const div = divisors[Math.floor(rng() * divisors.length)];
+    const x = Math.round(base / div);
+    correct = Math.round((x / base) * 100);
+    prompt = `<p><strong>${x}</strong> is what percentage of <strong>${base}</strong>?</p>`;
+    explanation = `<p>(${x} ÷ ${base}) × 100 = <strong>${correct}%</strong></p>`;
+    errFns = [() => Math.round((base / x) * 100), () => correct + 10, () => Math.round(x * base / 100)];
+  } else {
+    const pcts = [5,10,15,20,25,30];
+    const pct = pcts[Math.floor(rng() * pcts.length)];
+    const base = (Math.floor(rng() * 9) + 2) * 10;
+    const increase = rng() > 0.5;
+    const change = Math.round(pct / 100 * base);
+    correct = increase ? base + change : base - change;
+    prompt = `<p>${increase ? 'Increase' : 'Decrease'} <strong>${base}</strong> by <strong>${pct}%</strong>.</p>`;
+    explanation = `<p>${pct}% of ${base} = ${change}. ${base} ${increase ? '+' : '-'} ${change} = <strong>${correct}</strong></p>`;
+    errFns = [() => base + (increase ? -change : change), () => correct + 5, () => Math.round(base * (1 + pct / 100 * (increase ? -1 : 1)))];
+  }
+  const { options, correct: ci } = makeDistractors(correct, errFns, String);
+  return {
+    id: `num_${String(idx+1).padStart(2,'0')}`, module: 'numeracy', type: 'mcq',
+    prompt, options, correct: ci, explanation, svg: null
+  };
+}
+
+function genRatio(idx, rng) {
+  const a = Math.floor(rng() * 7) + 2;
+  let b = Math.floor(rng() * 7) + 2;
+  while (b === a) b = Math.floor(rng() * 7) + 2;
+  const k = Math.floor(rng() * 10) + 3;
+  const T = (a + b) * k;
+  const aShare = a * k;
+  const { options, correct: ci } = makeDistractors(aShare,
+    [() => Math.round(T / a), () => Math.round(b / (a + b) * T), () => T - aShare + 1],
+    String
+  );
+  return {
+    id: `num_${String(idx+1).padStart(2,'0')}`, module: 'numeracy', type: 'mcq',
+    prompt: `<p>A and B share in the ratio <strong>${a}:${b}</strong>. The total is <strong>${T}</strong>. How much does A receive?</p>`,
+    options, correct: ci,
+    explanation: `<p>Total parts = ${a} + ${b} = ${a+b}. Each part = ${T} ÷ ${a+b} = ${k}. A's share = ${a} × ${k} = <strong>${aShare}</strong></p>`,
+    svg: null
+  };
+}
+
+function genUnitConversion(idx, rng) {
+  const conversions = [
+    { from: 'km', to: 'm', factor: 1000, dir: 'multiply' },
+    { from: 'm', to: 'km', factor: 1000, dir: 'divide' },
+    { from: 'kg', to: 'g', factor: 1000, dir: 'multiply' },
+    { from: 'g', to: 'kg', factor: 1000, dir: 'divide' },
+    { from: 'hours', to: 'minutes', factor: 60, dir: 'multiply' },
+    { from: 'L', to: 'mL', factor: 1000, dir: 'multiply' },
+    { from: 'cm', to: 'mm', factor: 10, dir: 'multiply' },
+  ];
+  const conv = conversions[Math.floor(rng() * conversions.length)];
+  const val = Math.floor(rng() * 20) + 1;
+  const correct = conv.dir === 'multiply' ? val * conv.factor : val / conv.factor;
+  const correctStr = String(correct);
+  const { options, correct: ci } = makeDistractors(correctStr,
+    [() => String(conv.dir === 'multiply' ? val / conv.factor : val * conv.factor),
+     () => String(correct * 10),
+     () => String(correct / 10)],
+    v => v
+  );
+  return {
+    id: `num_${String(idx+1).padStart(2,'0')}`, module: 'numeracy', type: 'mcq',
+    prompt: `<p>Convert <strong>${val} ${conv.from}</strong> to <strong>${conv.to}</strong>.</p>`,
+    options, correct: ci,
+    explanation: `<p>${val} ${conv.from} × ${conv.factor} = <strong>${correct} ${conv.to}</strong></p>`,
+    svg: null
+  };
+}
+
+function genRate(idx, rng) {
+  const isSpeed = rng() > 0.5;
+  let prompt, correct, explanation, errFns;
+  if (isSpeed) {
+    const rate = Math.floor(rng() * 50) + 20;
+    const time = Math.floor(rng() * 6) + 2;
+    const dist = rate * time;
+    correct = time;
+    prompt = `<p>An electrician lays cable at <strong>${rate} metres per hour</strong>. How many hours to lay <strong>${dist} metres</strong>?</p>`;
+    explanation = `<p>Time = Distance ÷ Rate = ${dist} ÷ ${rate} = <strong>${correct} hours</strong></p>`;
+    errFns = [() => dist * rate, () => correct + 1, () => Math.round(rate / dist * 10) / 10];
+  } else {
+    const hourly = Math.floor(rng() * 40) + 30;
+    const hours = Math.floor(rng() * 8) + 2;
+    correct = hourly * hours;
+    prompt = `<p>A contractor charges <strong>$${hourly} per hour</strong>. A job takes <strong>${hours} hours</strong>. What is the total cost?</p>`;
+    explanation = `<p>Total = $${hourly} × ${hours} hours = <strong>$${correct}</strong></p>`;
+    errFns = [() => hourly + hours, () => correct + hourly, () => correct - hourly];
+  }
+  const { options, correct: ci } = makeDistractors(correct, errFns, v => isSpeed ? String(v) : `$${v}`);
+  return {
+    id: `num_${String(idx+1).padStart(2,'0')}`, module: 'numeracy', type: 'mcq',
+    prompt, options, correct: ci, explanation, svg: null
+  };
+}
+
+function genAverage(idx, rng) {
+  const isFind5th = rng() > 0.5;
+  let prompt, correct, explanation, errFns;
+  if (isFind5th) {
+    const avg = Math.floor(rng() * 30) + 20;
+    const n = 5;
+    const total = avg * n;
+    const known = [];
+    let knownSum = 0;
+    for (let i = 0; i < n - 1; i++) {
+      const v = Math.floor(rng() * 20) + (avg - 10);
+      known.push(v);
+      knownSum += v;
+    }
+    correct = total - knownSum;
+    prompt = `<p>The average of 5 numbers is <strong>${avg}</strong>. Four of them are <strong>${known.join(', ')}</strong>. What is the fifth?</p>`;
+    explanation = `<p>Total = ${avg} × 5 = ${total}. Fifth = ${total} - ${knownSum} = <strong>${correct}</strong></p>`;
+    errFns = [() => correct + 5, () => Math.round(knownSum / (n-1)), () => total - knownSum + avg];
+  } else {
+    const count = Math.floor(rng() * 3) + 4;
+    const nums = [];
+    let sum = 0;
+    for (let i = 0; i < count; i++) {
+      const v = Math.floor(rng() * 50) + 10;
+      nums.push(v);
+      sum += v;
+    }
+    correct = Math.round(sum / count);
+    prompt = `<p>What is the average of: <strong>${nums.join(', ')}</strong>?</p>`;
+    explanation = `<p>Sum = ${sum}. Average = ${sum} ÷ ${count} = <strong>${correct}</strong></p>`;
+    errFns = [() => Math.round(sum / (count + 1)), () => Math.round(sum / (count - 1)), () => correct + 5];
+  }
+  const { options, correct: ci } = makeDistractors(correct, errFns, String);
+  return {
+    id: `num_${String(idx+1).padStart(2,'0')}`, module: 'numeracy', type: 'mcq',
+    prompt, options, correct: ci, explanation, svg: null
+  };
+}
+
+function genTableQuestion(idx, rng) {
+  const days = ['Monday', 'Tuesday', 'Wednesday'];
+  const materials = ['Cable (m)', 'Conduit (m)', 'Connectors', 'Brackets'];
+  const data = days.map(() => materials.map(() => Math.floor(rng() * 90) + 10));
+  const subtype = Math.floor(rng() * 3);
+  let prompt, correct, explanation, errFns;
+  let tableHTML = `<table><tr><th>Day</th>${materials.map(m => `<th>${m}</th>`).join('')}</tr>`;
+  data.forEach((row, ri) => {
+    tableHTML += `<tr><td>${days[ri]}</td>${row.map(v => `<td>${v}</td>`).join('')}</tr>`;
+  });
+  tableHTML += '</table>';
+  if (subtype === 0) {
+    const ri = Math.floor(rng() * 3);
+    correct = data[ri].reduce((a,b) => a+b, 0);
+    prompt = `${tableHTML}<p>What is the total for <strong>${days[ri]}</strong>?</p>`;
+    explanation = `<p>${days[ri]} total = ${data[ri].join(' + ')} = <strong>${correct}</strong></p>`;
+    const otherRow = (ri + 1) % 3;
+    errFns = [() => data[otherRow].reduce((a,b)=>a+b,0), () => correct - data[ri][0], () => correct + 10];
+  } else if (subtype === 1) {
+    const colSums = materials.map((_, ci) => data.reduce((s, row) => s + row[ci], 0));
+    const maxIdx = colSums.indexOf(Math.max(...colSums));
+    correct = materials[maxIdx];
+    prompt = `${tableHTML}<p>Which material column has the <strong>highest total</strong>?</p>`;
+    explanation = `<p>Column totals: ${materials.map((m,i) => `${m}=${colSums[i]}`).join(', ')}. Highest: <strong>${correct}</strong></p>`;
+    const otherMats = materials.filter(m => m !== correct);
+    const { options, correct: ci } = makeDistractors(correct,
+      [() => otherMats[0], () => otherMats[1], () => otherMats[2] || otherMats[0]], v => v);
+    return {
+      id: `num_${String(idx+1).padStart(2,'0')}`, module: 'numeracy', type: 'mcq',
+      prompt, options, correct: ci, explanation, svg: null
+    };
+  } else {
+    const ri1 = 0, ri2 = 1;
+    const ci = Math.floor(rng() * 4);
+    correct = Math.abs(data[ri1][ci] - data[ri2][ci]);
+    prompt = `${tableHTML}<p>How much more <strong>${materials[ci]}</strong> was used on <strong>${days[ri1]}</strong> than <strong>${days[ri2]}</strong>? (use absolute difference)</p>`;
+    explanation = `<p>|${data[ri1][ci]} - ${data[ri2][ci]}| = <strong>${correct}</strong></p>`;
+    errFns = [() => data[ri1][ci] + data[ri2][ci], () => correct + data[ri1][ci], () => correct + 5];
+  }
+  const { options, correct: ci2 } = makeDistractors(correct, errFns, String);
+  return {
+    id: `num_${String(idx+1).padStart(2,'0')}`, module: 'numeracy', type: 'mcq',
+    prompt, options, correct: ci2, explanation, svg: null
+  };
+}
+
+function genBarChartQuestion(idx, rng) {
+  const values = [1,2,3,4].map(() => Math.floor(rng() * 80) + 20);
+  const maxVal = Math.max(...values);
+  const chartH = 150, chartW = 300, barW = 40, gap = 15, leftPad = 40, bottomPad = 30;
+  let bars = '';
+  values.forEach((v, i) => {
+    const bh = Math.round((v / maxVal) * chartH);
+    const x = leftPad + i * (barW + gap);
+    const y = chartH - bh;
+    bars += `<rect x="${x}" y="${y}" width="${barW}" height="${bh}" fill="#2563eb" opacity="0.8"/>`;
+    bars += `<text x="${x + barW/2}" y="${y - 4}" text-anchor="middle" font-size="10" fill="#222">${v}</text>`;
+    bars += `<text x="${x + barW/2}" y="${chartH + 15}" text-anchor="middle" font-size="10" fill="#555">Wk ${i+1}</text>`;
+  });
+  const svgStr = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 ${chartH + bottomPad + 10}" width="300" height="${chartH + bottomPad + 10}">${bars}<line x1="${leftPad}" y1="0" x2="${leftPad}" y2="${chartH}" stroke="#888" stroke-width="1"/><line x1="${leftPad}" y1="${chartH}" x2="${leftPad + 4*(barW+gap)}" y2="${chartH}" stroke="#888" stroke-width="1"/></svg>`;
+  const subtype = Math.floor(rng() * 3);
+  let prompt, correct, explanation, errFns;
+  if (subtype === 0) {
+    const maxIdx = values.indexOf(maxVal);
+    correct = `Week ${maxIdx + 1}`;
+    prompt = `${svgStr}<p>Which week had the <strong>highest</strong> value?</p>`;
+    explanation = `<p>Values: ${values.map((v,i)=>`Week ${i+1}=${v}`).join(', ')}. Highest: <strong>${correct}</strong></p>`;
+    const others = [0,1,2,3].filter(i => i !== maxIdx).map(i => `Week ${i+1}`);
+    const { options, correct: ci } = makeDistractors(correct, [() => others[0], () => others[1], () => others[2]], v => v);
+    return {
+      id: `num_${String(idx+1).padStart(2,'0')}`, module: 'numeracy', type: 'mcq',
+      prompt, options, correct: ci, explanation, svg: null
+    };
+  } else if (subtype === 1) {
+    correct = values.reduce((a,b) => a+b, 0);
+    prompt = `${svgStr}<p>What is the <strong>total</strong> across all four weeks?</p>`;
+    explanation = `<p>${values.join(' + ')} = <strong>${correct}</strong></p>`;
+    errFns = [() => correct - values[0], () => correct + values[0], () => correct * 2];
+  } else {
+    const w1 = Math.floor(rng() * 4), w2 = (w1 + 1 + Math.floor(rng() * 3)) % 4;
+    correct = Math.abs(values[w1] - values[w2]);
+    prompt = `${svgStr}<p>How much greater was <strong>Week ${w1+1}</strong> (${values[w1]}) than <strong>Week ${w2+1}</strong> (${values[w2]})? (absolute difference)</p>`;
+    explanation = `<p>|${values[w1]} - ${values[w2]}| = <strong>${correct}</strong></p>`;
+    errFns = [() => values[w1] + values[w2], () => correct + 10, () => values[w1]];
+  }
+  const { options, correct: ci2 } = makeDistractors(correct, errFns, String);
+  return {
+    id: `num_${String(idx+1).padStart(2,'0')}`, module: 'numeracy', type: 'mcq',
+    prompt, options, correct: ci2, explanation, svg: null
+  };
+}
+
+function generateNumeracyBank() {
+  const seed = Date.now() ^ (Math.random() * 0xffffffff);
+  const rng = lcg(seed);
+  const raw = [];
+  // arithmetic×2, fraction×2, decimal×2, percentage×3, ratio×2, unit×2, rate×2, average×2, table×1, bar×1 = 21
+  for (let i = 0; i < 2; i++) raw.push(genArithmetic(raw.length, rng));
+  for (let i = 0; i < 2; i++) raw.push(genFraction(raw.length, rng));
+  for (let i = 0; i < 2; i++) raw.push(genDecimal(raw.length, rng));
+  for (let i = 0; i < 3; i++) raw.push(genPercentage(raw.length, rng));
+  for (let i = 0; i < 2; i++) raw.push(genRatio(raw.length, rng));
+  for (let i = 0; i < 2; i++) raw.push(genUnitConversion(raw.length, rng));
+  for (let i = 0; i < 2; i++) raw.push(genRate(raw.length, rng));
+  for (let i = 0; i < 2; i++) raw.push(genAverage(raw.length, rng));
+  raw.push(genTableQuestion(raw.length, rng));
+  raw.push(genBarChartQuestion(raw.length, rng));
+  // shuffle and take 20
+  for (let i = raw.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [raw[i], raw[j]] = [raw[j], raw[i]];
+  }
+  return raw.slice(0, 20).map((q, i) => ({ ...q, id: `num_${String(i+1).padStart(2,'0')}` }));
+}
+
+// ---- 1D. Abstract Reasoning ----
+
+const SHAPES = {
+  circle: (cx,cy,r,fill,stroke='#222') => `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${fill}" stroke="${stroke}" stroke-width="2"/>`,
+  square: (cx,cy,r,fill,stroke='#222') => `<rect x="${cx-r}" y="${cy-r}" width="${r*2}" height="${r*2}" fill="${fill}" stroke="${stroke}" stroke-width="2"/>`,
+  triangle: (cx,cy,r,fill,stroke='#222') => {
+    const pts = [[cx,cy-r],[cx+r*0.866,cy+r*0.5],[cx-r*0.866,cy+r*0.5]].map(p=>p.join(',')).join(' ');
+    return `<polygon points="${pts}" fill="${fill}" stroke="${stroke}" stroke-width="2"/>`;
+  },
+  diamond: (cx,cy,r,fill,stroke='#222') => {
+    const pts = [[cx,cy-r],[cx+r,cy],[cx,cy+r],[cx-r,cy]].map(p=>p.join(',')).join(' ');
+    return `<polygon points="${pts}" fill="${fill}" stroke="${stroke}" stroke-width="2"/>`;
+  },
+  cross: (cx,cy,r,fill,stroke='#222') => `<path d="M${cx-r} ${cy}h${r*2}M${cx} ${cy-r}v${r*2}" stroke="${stroke}" stroke-width="3" fill="none"/>`,
+  hexagon: (cx,cy,r,fill,stroke='#222') => {
+    const pts = Array.from({length:6},(_,i)=>{const a=i*60*Math.PI/180;return `${cx+r*Math.cos(a)},${cy+r*Math.sin(a)}`;}).join(' ');
+    return `<polygon points="${pts}" fill="${fill}" stroke="${stroke}" stroke-width="2"/>`;
+  },
+  star: (cx,cy,r,fill,stroke='#222') => {
+    let pts=''; for(let i=0;i<10;i++){const a=i*36*Math.PI/180,ri=i%2?r*0.4:r;pts+=`${cx+ri*Math.cos(a-Math.PI/2)},${cy+ri*Math.sin(a-Math.PI/2)} `;}
+    return `<polygon points="${pts.trim()}" fill="${fill}" stroke="${stroke}" stroke-width="1.5"/>`;
+  }
+};
+
+const SHAPE_KEYS = Object.keys(SHAPES);
+const FILLS = ['none','#222','#888','#ddd','white'];
+
+function renderFrame(spec) {
+  const { shape, fill, rotation, scale, count } = spec;
+  const r = Math.round(15 * (scale || 1));
+  let inner = '';
+  const fn = SHAPES[shape] || SHAPES.circle;
+  if (count <= 1) {
+    inner = fn(40, 40, r, fill);
+  } else if (count === 2) {
+    inner = fn(25, 40, r * 0.7, fill) + fn(55, 40, r * 0.7, fill);
+  } else {
+    inner = fn(25, 25, r * 0.6, fill) + fn(55, 25, r * 0.6, fill) + fn(40, 55, r * 0.6, fill);
+  }
+  const rotAttr = rotation ? ` transform="rotate(${rotation},40,40)"` : '';
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" width="80" height="80"><rect width="80" height="80" fill="#f8f8f4" rx="4"/><g${rotAttr}>${inner}</g></svg>`;
+}
+
+function renderFrameSmall(spec) {
+  const { shape, fill, rotation, scale, count } = spec;
+  const r = Math.round(12 * (scale || 1));
+  let inner = '';
+  const fn = SHAPES[shape] || SHAPES.circle;
+  if (count <= 1) {
+    inner = fn(32, 32, r, fill);
+  } else if (count === 2) {
+    inner = fn(20, 32, r * 0.7, fill) + fn(44, 32, r * 0.7, fill);
+  } else {
+    inner = fn(20, 20, r * 0.6, fill) + fn(44, 20, r * 0.6, fill) + fn(32, 44, r * 0.6, fill);
+  }
+  const rotAttr = rotation ? ` transform="rotate(${rotation},32,32)"` : '';
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64"><rect width="64" height="64" fill="#f8f8f4" rx="4"/><g${rotAttr}>${inner}</g></svg>`;
+}
+
+let _absRng = lcg(42);
+function resetAbsRng(seed) { _absRng = lcg(seed); }
+
+function genSequenceQuestion(idxStr) {
+  const shape = SHAPE_KEYS[Math.floor(_absRng() * SHAPE_KEYS.length)];
+  const fillSeq = FILLS.slice();
+  const startFillIdx = Math.floor(_absRng() * FILLS.length);
+  const rotStep = [0, 45, 90][Math.floor(_absRng() * 3)];
+  const countStart = Math.floor(_absRng() * 2) + 1;
+  const useCount = _absRng() > 0.5 && countStart < 3;
+  const specs = [];
+  for (let i = 0; i < 4; i++) {
+    specs.push({
+      shape,
+      fill: fillSeq[(startFillIdx + i) % FILLS.length],
+      rotation: rotStep * i,
+      scale: 1,
+      count: useCount ? countStart + i : 1
+    });
+  }
+  const correctSpec = specs[3];
+  const distSpecs = [
+    { ...correctSpec, fill: fillSeq[(startFillIdx + 4) % FILLS.length] },
+    { ...correctSpec, rotation: (correctSpec.rotation + 90) % 360 },
+    { ...correctSpec, count: Math.max(1, (correctSpec.count || 1) - 1), fill: fillSeq[(startFillIdx + 2) % FILLS.length] }
+  ];
+  const allOpts = [correctSpec, ...distSpecs];
+  // shuffle
+  let ci = 0;
+  for (let i = allOpts.length - 1; i > 0; i--) {
+    const j = Math.floor(_absRng() * (i + 1));
+    [allOpts[i], allOpts[j]] = [allOpts[j], allOpts[i]];
+    if (j === ci) ci = i; else if (i === ci) ci = j;
+  }
+  const seqHtml = specs.slice(0,3).map((s,i) =>
+    `<div class="seq-item">${renderFrame(s)}<div class="seq-label">${i+1}</div></div>`
+  ).join('<div style="font-size:1.5rem;color:#888;align-self:center">→</div>') +
+  '<div style="font-size:1.5rem;color:#888;align-self:center">→</div>' +
+  `<div class="seq-item"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" width="80" height="80"><rect width="80" height="80" fill="#e8e8e4" rx="4"/><text x="40" y="48" text-anchor="middle" font-size="32" fill="#999">?</text></svg><div class="seq-label">4</div></div>`;
+  return {
+    id: idxStr, module: 'abstract', type: 'mcq',
+    prompt: `<p>What comes next in the sequence?</p><div class="seq-display">${seqHtml}</div>`,
+    options: allOpts.map(s => renderFrameSmall(s)),
+    correct: ci,
+    explanation: `<p>The sequence follows: shape="${shape}", fill cycles through ${FILLS.join('→')}, rotation increases by ${rotStep}° each step${useCount ? ', count increases by 1' : ''}. The correct answer applies all rules to step 4.</p>`,
+    svg: null, isAbstract: true
+  };
+}
+
+function genMatrixQuestion(idxStr) {
+  const shape = SHAPE_KEYS[Math.floor(_absRng() * SHAPE_KEYS.length)];
+  const fills = [FILLS[Math.floor(_absRng() * FILLS.length)], FILLS[Math.floor(_absRng() * FILLS.length)], FILLS[Math.floor(_absRng() * FILLS.length)], FILLS[Math.floor(_absRng() * FILLS.length)]];
+  const rowRots = [0, 90];
+  const colRots = [0, 45];
+  // 2x2 grid: [TL, TR, BL, BR(missing)]
+  const specs = [
+    { shape, fill: fills[0], rotation: rowRots[0] + colRots[0], scale: 1, count: 1 },
+    { shape, fill: fills[1], rotation: rowRots[0] + colRots[1], scale: 1, count: 1 },
+    { shape, fill: fills[2], rotation: rowRots[1] + colRots[0], scale: 1, count: 1 },
+    { shape, fill: fills[3], rotation: rowRots[1] + colRots[1], scale: 1, count: 1 }
+  ];
+  const correctSpec = specs[3];
+  const distSpecs = [
+    { ...correctSpec, fill: FILLS[(FILLS.indexOf(correctSpec.fill) + 1) % FILLS.length] },
+    { ...correctSpec, rotation: (correctSpec.rotation + 45) % 360 },
+    { ...correctSpec, fill: fills[0], rotation: colRots[0] }
+  ];
+  const allOpts = [correctSpec, ...distSpecs];
+  let ci = 0;
+  for (let i = allOpts.length - 1; i > 0; i--) {
+    const j = Math.floor(_absRng() * (i + 1));
+    [allOpts[i], allOpts[j]] = [allOpts[j], allOpts[i]];
+    if (j === ci) ci = i; else if (i === ci) ci = j;
+  }
+  const matrixHtml = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;width:172px;margin:0.5rem 0">
+    ${specs.slice(0,3).map(s => `<div>${renderFrame(s)}</div>`).join('')}
+    <div><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" width="80" height="80"><rect width="80" height="80" fill="#e8e8e4" rx="4"/><text x="40" y="48" text-anchor="middle" font-size="32" fill="#999">?</text></svg></div>
+  </div>`;
+  return {
+    id: idxStr, module: 'abstract', type: 'mcq',
+    prompt: `<p>Which option completes the matrix?</p>${matrixHtml}`,
+    options: allOpts.map(s => renderFrameSmall(s)),
+    correct: ci,
+    explanation: `<p>Each row rotates by ${rowRots[1]}°; each column rotates by ${colRots[1]}°. The missing cell requires rotation=${correctSpec.rotation}° and fill="${correctSpec.fill}".</p>`,
+    svg: null, isAbstract: true
+  };
+}
+
+function genOddOneOutQuestion(idxStr) {
+  const shape = SHAPE_KEYS[Math.floor(_absRng() * SHAPE_KEYS.length)];
+  const oddShape = SHAPE_KEYS[Math.floor(_absRng() * SHAPE_KEYS.length)] || SHAPE_KEYS[1];
+  const fill = FILLS[Math.floor(_absRng() * FILLS.length)];
+  const oddIdx = Math.floor(_absRng() * 5);
+  const specs = Array.from({length:5}, (_,i) => ({
+    shape: i === oddIdx ? oddShape : shape,
+    fill, rotation: 0, scale: 1, count: 1
+  }));
+  const labels = ['A','B','C','D','E'];
+  const svgOpts = specs.map((s,i) => {
+    const sv = renderFrameSmall(s);
+    return `<div style="text-align:center">${sv}<div style="font-size:0.85rem;font-weight:700;margin-top:2px">${labels[i]}</div></div>`;
+  });
+  const rowHtml = `<div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin:0.5rem 0">${svgOpts.join('')}</div>`;
+  return {
+    id: idxStr, module: 'abstract', type: 'mcq',
+    prompt: `<p>Which shape is the odd one out?</p>${rowHtml}`,
+    options: labels,
+    correct: oddIdx,
+    explanation: `<p>Options ${labels.filter((_,i)=>i!==oddIdx).join(', ')} all show a <em>${shape}</em>. Option <strong>${labels[oddIdx]}</strong> shows a <em>${oddShape}</em> — making it the odd one out.</p>`,
+    svg: null, isAbstract: false
+  };
+}
+
+function generateAbstractBank() {
+  const seed = Date.now() ^ (Math.random() * 0xffffffff);
+  resetAbsRng(seed);
+  const questions = [];
+  for (let i = 0; i < 8; i++) questions.push(genSequenceQuestion(`abs_${String(i+1).padStart(2,'0')}`));
+  for (let i = 0; i < 7; i++) questions.push(genMatrixQuestion(`abs_${String(i+9).padStart(2,'0')}`));
+  for (let i = 0; i < 5; i++) questions.push(genOddOneOutQuestion(`abs_${String(i+16).padStart(2,'0')}`));
+  // shuffle
+  const rng2 = lcg(seed + 1);
+  for (let i = questions.length - 1; i > 0; i--) {
+    const j = Math.floor(rng2() * (i + 1));
+    [questions[i], questions[j]] = [questions[j], questions[i]];
+  }
+  return questions.map((q, i) => ({ ...q, id: `abs_${String(i+1).padStart(2,'0')}` }));
+}
+
+// ---- 1E. Safety Awareness ----
+
+const SAFETY_QUESTIONS = [
+  {
+    id:'safe_01', module:'safety', type:'mcq',
+    prompt:`<p>You are about to work on an electrical switchboard that a colleague says is already isolated. You do not have your own lock on it. What should you do?</p>`,
+    options:['Trust your colleague and begin work immediately','Apply your own personal lock and tag, then test for dead before touching anything','Ask your supervisor verbally and proceed if they confirm isolation','Wait for your colleague to return and supervise you'],
+    correct:1,
+    explanation:`<p>The golden rule of electrical safety is: <strong>never assume isolation</strong>. You must apply your own personal lock and tag to the isolation point — one lock per person — and verify the circuit is de-energised by testing before touching. A colleague's word, however trustworthy, does not protect you if something changes. Always test for dead.</p>`,
+    svg:null
+  },
+  {
+    id:'safe_02', module:'safety', type:'mcq',
+    prompt:`<p>You are working on a distribution pole 8 metres above ground. You notice your safety harness D-ring is showing a red indicator, which means it has been shock-loaded in a previous fall. What is the correct action?</p>`,
+    options:['Continue working — the harness is still intact and the job must be finished today','Descend immediately, take the harness out of service, and tag it for inspection','Inspect it visually yourself; if it looks undamaged, continue','Tie an extra knot in the lanyard to compensate'],
+    correct:1,
+    explanation:`<p>A shock-loaded harness must be immediately removed from service regardless of its appearance. Internal webbing damage from a fall is invisible to the eye. Continuing to use it puts your life at risk. Descend, tag it out-of-service, and report it to your supervisor. The job timeline never justifies life-safety shortcuts.</p>`,
+    svg:null
+  },
+  {
+    id:'safe_03', module:'safety', type:'mcq',
+    prompt:`<p>While excavating near a residential street, your machine operator reports feeling resistance and a slight jolt. There are no cable markers in that exact spot on the dial-before-you-dig plan. What do you do?</p>`,
+    options:['Continue digging carefully by hand to see what it was','Stop all excavation immediately, treat it as a live cable strike, and follow the emergency procedure','Check the utility plan again; if nothing is marked, it is probably just a rock','Call the utility company tomorrow and note the incident in the log'],
+    correct:1,
+    explanation:`<p>Any unexplained resistance or jolt during excavation must be treated as a live cable strike until proven otherwise. Stop immediately. Keep everyone clear. Call Emergency Services and the network operator. Plans are not always accurate — unregistered cables exist. Proceeding could cause electrocution, explosion, or fire. Never assume it is safe without verification from the asset owner.</p>`,
+    svg:null
+  },
+  {
+    id:'safe_04', module:'safety', type:'mcq',
+    prompt:`<p>You are 3 hours into a 12-hour nightshift in extreme heat. A crew-mate is slurring words slightly and seems confused about the task you both completed 30 minutes ago. What is the most appropriate action?</p>`,
+    options:['Tell them to drink more water and keep going — heat affects everyone','Stop work, move them to a cool area, alert your supervisor and arrange for medical assessment','Let them rest for 10 minutes and reassess before continuing','Finish the critical task first, then raise the concern during the next break'],
+    correct:1,
+    explanation:`<p>Slurred speech and confusion are signs of heat stroke — a medical emergency. Stop work immediately. Move the person to shade or a cool environment. Notify your supervisor and call for medical help. Do not continue the task; productivity never outweighs life. Delay in treating heat stroke can be fatal. You have a duty of care to your crew-mates.</p>`,
+    svg:null
+  },
+  {
+    id:'safe_05', module:'safety', type:'mcq',
+    prompt:`<p>Your supervisor asks you to skip the pre-start safety check on a newly arrived excavator because the crew is running two hours behind schedule. What should you do?</p>`,
+    options:['Skip the check — the supervisor takes responsibility if anything goes wrong','Do a quick visual check only and note it in the log','Politely decline, complete the full pre-start check, and document the request from your supervisor','Start work and do the check during the first break'],
+    correct:2,
+    explanation:`<p>You cannot sign off on plant you have not inspected — doing so makes you personally liable if the machine fails and causes injury. The supervisor's instruction does not transfer your legal and moral obligation. Politely but firmly complete the check, document it, and note in writing that you were asked to skip it. Schedule pressure is never a valid reason to bypass safety controls.</p>`,
+    svg:null
+  },
+  {
+    id:'safe_06', module:'safety', type:'mcq',
+    prompt:`<p>You notice a near-miss: a reversing truck almost struck a worker who was in a blind spot. No one was hurt. What is the appropriate response?</p>`,
+    options:['Say nothing — no one was hurt so there is nothing to report','Tell the truck driver to be more careful next time','Report the near-miss through the formal incident reporting system and review the traffic management plan','Mention it informally to your supervisor at the end of shift'],
+    correct:2,
+    explanation:`<p>Near-misses are high-value safety data — they reveal hazards before someone is killed. Formal reporting triggers an investigation, a corrective action, and a review of the traffic management plan. Informal mentions or silence leaves the hazard in place. Every near-miss is a warning that the current controls are inadequate. Reporting is not about blame; it is about preventing the next, potentially fatal, event.</p>`,
+    svg:null
+  },
+  {
+    id:'safe_07', module:'safety', type:'mcq',
+    prompt:`<p>You are working on a live LV (low voltage) panel under a permit. You realise you do not have the correct insulated gloves rated for the voltage. They are in the van, 50 metres away. What do you do?</p>`,
+    options:['Work carefully without gloves — the task will only take two minutes','Use standard work gloves; they offer some protection','Stop work, retrieve the correct PPE, and resume only when properly equipped','Ask a colleague to watch while you quickly complete the task'],
+    correct:2,
+    explanation:`<p>PPE requirements are non-negotiable minimum controls — not a suggestion. Working on a live LV panel without rated insulated gloves risks electrocution. Two minutes is more than enough time to receive a fatal shock. Stop, walk to the van, and get the correct equipment. No task is so urgent it justifies skipping PPE.</p>`,
+    svg:null
+  },
+  {
+    id:'safe_08', module:'safety', type:'mcq',
+    prompt:`<p>You are a new employee and a more experienced worker tells you "that's not how we do it here" when you follow the documented safe work procedure. They show you a faster shortcut the team commonly uses. What do you do?</p>`,
+    options:['Follow the experienced worker — they know the site better than the procedure writers','Follow the shortcut for now and raise it in your performance review','Follow the documented procedure and raise the discrepancy with your supervisor so the procedure can be reviewed if the shortcut is genuinely safer','Follow whichever method you feel comfortable with'],
+    correct:2,
+    explanation:`<p>Procedures exist because they have been risk-assessed. "We always do it this way" is how safety incidents happen — informal shortcuts are often invisible until something goes wrong. Follow the documented procedure. If the shortcut is genuinely better and safer, raise it formally so it can be assessed and the procedure updated.</p>`,
+    svg:null
+  },
+  {
+    id:'safe_09', module:'safety', type:'mcq',
+    prompt:`<p>You are about to use an angle grinder and notice the disc has a small visible crack. A replacement disc is available on the truck. What is the correct action?</p>`,
+    options:['Use the cracked disc for a short task — it is probably fine','Wrap tape around the crack to reinforce it and continue','Replace the disc before using the grinder','Grind carefully at low speed and monitor the crack'],
+    correct:2,
+    explanation:`<p>A cracked abrasive disc can explode at grinding speeds, ejecting fragments at lethal velocity. There is no safe way to use a cracked disc. Replace it immediately — a replacement is available and takes 2 minutes. Never use a disc with visible damage, and always inspect discs before use.</p>`,
+    svg:null
+  },
+  {
+    id:'safe_10', module:'safety', type:'rank4',
+    prompt:`<p>You discover a colleague who appears to smell strongly of alcohol at the start of a shift that involves work at heights. Rank the following responses from <strong>most</strong> to <strong>least</strong> appropriate:</p><p><strong>A.</strong> Tell the colleague privately that you noticed, then watch them to see if they perform OK<br><strong>B.</strong> Immediately report the observation to your supervisor before work begins<br><strong>C.</strong> Say nothing — it is not your business and you don't want to cause trouble<br><strong>D.</strong> Ask the colleague directly and suggest they speak to the supervisor themselves</p>`,
+    options:['B → D → A → C','A → B → D → C','D → B → A → C','B → A → D → C'],
+    correct:0,
+    explanation:`<p><strong>Best order: B → D → A → C.</strong> Immediate supervisor notification (B) is the priority — work at heights while impaired is life-threatening. Encouraging the colleague to self-report (D) is a compassionate secondary step. A private word (A) is well-intentioned but insufficient. Saying nothing (C) is the least appropriate — silence makes you complicit in an unsafe condition.</p>`,
+    svg:null
+  },
+  {
+    id:'safe_11', module:'safety', type:'mcq',
+    prompt:`<p>You are performing live LV work under a permit. A member of the public approaches the barrier and asks what you are doing. What is the correct action?</p>`,
+    options:['Ignore them and focus on the live work','Quickly explain the work, then return to the task immediately','Pause work safely, step back from the live parts, then address the public and ask them to stay behind the barrier','Ask your colleague to deal with the public while you continue working'],
+    correct:2,
+    explanation:`<p>Distraction during live electrical work is a major cause of incidents. The safe action is to pause, step away from the live parts, and then address the distraction. Working while distracted risks contact with live conductors.</p>`,
+    svg:null
+  },
+  {
+    id:'safe_12', module:'safety', type:'mcq',
+    prompt:`<p>A job is running behind schedule. Your supervisor suggests bypassing the lock-out/tag-out (LOTO) procedure to re-energise equipment "just for a minute" to test something. What is your response?</p>`,
+    options:['Comply — the supervisor carries the responsibility','Comply if no one is physically working on the equipment at that exact moment','Refuse and explain that LOTO must remain in place until all workers have removed their locks; escalate if pressured','Remove your lock only, and advise others verbally to stand clear'],
+    correct:2,
+    explanation:`<p>LOTO is an absolute control — it exists to prevent unexpected energisation while people are working on equipment. Re-energising under time pressure is one of the most common causes of electrical fatalities. You must refuse, clearly and professionally. The supervisor does not have the authority to override a life-critical safety control.</p>`,
+    svg:null
+  },
+  {
+    id:'safe_13', module:'safety', type:'mcq',
+    prompt:`<p>You notice a frayed extension lead being used to power tools in a wet outdoor work area. The lead belongs to a subcontractor who is not on site right now. What should you do?</p>`,
+    options:['Leave it — it belongs to the subcontractor, not you','Take the lead out of service (unplug it), tag it as unsafe, and notify your supervisor and the subcontractor','Put a warning sign near it so others are aware','Test it with a multimeter and continue using it if no fault is detected'],
+    correct:1,
+    explanation:`<p>A frayed lead in a wet environment is an imminent electrocution and fire risk. Ownership does not matter — you have a duty to act on any hazard you observe. Unplug it immediately, tag it as defective, and inform your supervisor so the subcontractor can be notified.</p>`,
+    svg:null
+  },
+  {
+    id:'safe_14', module:'safety', type:'rank4',
+    prompt:`<p>You are lone-working at a remote substation on a scheduled 4-hour task. You are now 2 hours in and have not checked in with the control room as required by the lone worker procedure (check-in every 60 minutes). Rank the following actions from <strong>most</strong> to <strong>least</strong> appropriate:</p><p><strong>A.</strong> Check in with control room immediately and explain the missed calls<br><strong>B.</strong> Finish the task first, then check in when leaving the site<br><strong>C.</strong> Continue working without checking in — you are fine and nearly done<br><strong>D.</strong> Set a timer on your phone so you do not miss the next check-in, then call immediately</p>`,
+    options:['D → A → B → C','A → D → B → C','D → B → A → C','A → B → D → C'],
+    correct:1,
+    explanation:`<p><strong>Best order: A → D → B → C.</strong> The immediate priority is to check in now (A) — the control room may already be initiating an emergency response after two missed calls. Setting a timer (D) prevents recurrence. Finishing first (B) compounds the violation. Continuing without checking in (C) is the worst option.</p>`,
+    svg:null
+  },
+  {
+    id:'safe_15', module:'safety', type:'mcq',
+    prompt:`<p>You are about to use a chemical cleaner you have not used before. The Safety Data Sheet (SDS) is not in the site chemical register. What do you do?</p>`,
+    options:['Use the chemical anyway — similar products are usually safe','Ask a colleague who has used it before for verbal instructions','Do not use the chemical until you have obtained and read the current SDS, and ensure it is added to the register','Read the label on the container — that is sufficient'],
+    correct:2,
+    explanation:`<p>The SDS contains critical information about PPE requirements, first aid for exposure, fire risks, and safe handling procedures. A product label is insufficient. A colleague's verbal summary is not a substitute. Obtain the SDS, read it, ensure the correct PPE is available, and add it to the register.</p>`,
+    svg:null
+  }
+];
+
+// ---- 1F. Mechanical Reasoning ----
+
+const MECHANICAL_QUESTIONS = [
+  {
+    id:'mech_01', module:'mechanical', type:'mcq',
+    prompt:`<p>Gear A has 8 teeth and meshes with Gear B which has 24 teeth. If Gear A rotates at 90 RPM, what is the speed of Gear B?</p>`,
+    svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 120" width="200" height="120"><circle cx="60" cy="60" r="28" fill="none" stroke="#444" stroke-width="2"/><circle cx="140" cy="60" r="44" fill="none" stroke="#444" stroke-width="2"/><text x="60" y="64" text-anchor="middle" font-size="11" fill="#222">A (8T)</text><text x="140" y="64" text-anchor="middle" font-size="11" fill="#222">B (24T)</text><text x="60" y="100" text-anchor="middle" font-size="10" fill="#666">90 RPM</text><text x="140" y="112" text-anchor="middle" font-size="10" fill="#666">? RPM</text></svg>`,
+    options:['270 RPM','45 RPM','30 RPM','180 RPM'],
+    correct:2,
+    explanation:`<p>Speed ratio is inversely proportional to tooth count: Speed B = 90 × (8/24) = 90 × (1/3) = <strong>30 RPM</strong>. The larger gear always rotates slower.</p>`
+  },
+  {
+    id:'mech_02', module:'mechanical', type:'mcq',
+    prompt:`<p>Two meshed gears: Gear X rotates clockwise. In which direction does Gear Y rotate?</p>`,
+    svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 100" width="180" height="100"><circle cx="55" cy="50" r="35" fill="#e8f0fe" stroke="#444" stroke-width="2"/><circle cx="125" cy="50" r="35" fill="#fef3e2" stroke="#444" stroke-width="2"/><text x="55" y="54" text-anchor="middle" font-size="12" fill="#222">X</text><text x="125" y="54" text-anchor="middle" font-size="12" fill="#222">Y</text><defs><marker id="arr" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#2563eb"/></marker></defs><path d="M 30 35 A 25 25 0 0 1 50 25" stroke="#2563eb" stroke-width="2" fill="none" marker-end="url(#arr)"/></svg>`,
+    options:['Clockwise','Counter-clockwise','It depends on gear size','It does not rotate'],
+    correct:1,
+    explanation:`<p>Meshed gears always rotate in <strong>opposite directions</strong>. If Gear X rotates clockwise, Gear Y rotates counter-clockwise. Size affects speed, not direction.</p>`
+  },
+  {
+    id:'mech_03', module:'mechanical', type:'mcq',
+    prompt:`<p>A motor drives a small gear (20 teeth) which meshes with a large gear (100 teeth). The large gear is connected to a pump. If the motor runs at 500 RPM, what speed does the pump run at?</p>`,
+    svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 100" width="220" height="100"><circle cx="50" cy="50" r="20" fill="#e8f0fe" stroke="#444" stroke-width="2"/><circle cx="150" cy="50" r="50" fill="#fef3e2" stroke="#444" stroke-width="2"/><text x="50" y="54" text-anchor="middle" font-size="10" fill="#222">20T</text><text x="150" y="54" text-anchor="middle" font-size="10" fill="#222">100T</text><text x="50" y="88" text-anchor="middle" font-size="10" fill="#666">Motor 500RPM</text><text x="205" y="54" text-anchor="middle" font-size="10" fill="#666">Pump</text></svg>`,
+    options:['2500 RPM','100 RPM','250 RPM','50 RPM'],
+    correct:1,
+    explanation:`<p>Pump speed = Motor speed × (driver teeth / driven teeth) = 500 × (20/100) = <strong>100 RPM</strong>. This is a 5:1 speed reduction — useful for increasing torque.</p>`
+  },
+  {
+    id:'mech_04', module:'mechanical', type:'mcq',
+    prompt:`<p>A single fixed pulley is used to lift a 200 N load. Ignoring friction, what force must be applied to the rope?</p>`,
+    svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 150" width="120" height="150"><rect x="50" y="5" width="20" height="8" fill="#888"/><circle cx="60" cy="35" r="18" fill="none" stroke="#444" stroke-width="3"/><line x1="42" y1="35" x2="42" y2="120" stroke="#444" stroke-width="2"/><line x1="78" y1="35" x2="78" y2="90" stroke="#444" stroke-width="2"/><rect x="60" y="90" width="36" height="28" fill="#ccc" stroke="#444" stroke-width="1.5"/><text x="78" y="108" text-anchor="middle" font-size="11" fill="#222">200N</text><text x="36" y="100" text-anchor="middle" font-size="11" fill="#2563eb">F=?</text></svg>`,
+    options:['100 N','200 N','400 N','50 N'],
+    correct:1,
+    explanation:`<p>A single <em>fixed</em> pulley only changes the direction of force — it provides no mechanical advantage. You must apply a force equal to the load: <strong>200 N</strong>.</p>`
+  },
+  {
+    id:'mech_05', module:'mechanical', type:'mcq',
+    prompt:`<p>A moveable pulley system has one moveable pulley and one fixed pulley. A 400 N load is attached to the moveable pulley. Approximately what effort force is needed (ignoring friction)?</p>`,
+    svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 160" width="140" height="160"><rect x="55" y="5" width="30" height="8" fill="#888"/><circle cx="100" cy="35" r="16" fill="none" stroke="#444" stroke-width="2.5"/><circle cx="55" cy="80" r="16" fill="none" stroke="#444" stroke-width="2.5"/><line x1="84" y1="35" x2="71" y2="80" stroke="#444" stroke-width="2"/><line x1="39" y1="80" x2="39" y2="30" stroke="#444" stroke-width="2"/><line x1="116" y1="35" x2="116" y2="25" stroke="#444" stroke-width="2"/><rect x="35" y="100" width="40" height="30" fill="#ccc" stroke="#444" stroke-width="1.5"/><text x="55" y="120" text-anchor="middle" font-size="11" fill="#222">400N</text><text x="116" y="20" text-anchor="middle" font-size="11" fill="#2563eb">F?</text></svg>`,
+    options:['400 N','100 N','200 N','800 N'],
+    correct:2,
+    explanation:`<p>A single moveable pulley gives a mechanical advantage of 2. Required effort = Load / MA = 400 / 2 = <strong>200 N</strong>.</p>`
+  },
+  {
+    id:'mech_06', module:'mechanical', type:'mcq',
+    prompt:`<p>A lever has its fulcrum in the middle. A 60 kg load sits 1 m from the fulcrum on the left. How far from the fulcrum must a 30 kg effort be applied on the right to balance it?</p>`,
+    svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 100" width="240" height="100"><line x1="20" y1="50" x2="220" y2="50" stroke="#444" stroke-width="3"/><polygon points="120,50 110,80 130,80" fill="#888"/><circle cx="60" cy="42" r="12" fill="#ccc" stroke="#444" stroke-width="2"/><text x="60" y="46" text-anchor="middle" font-size="10" fill="#222">60kg</text><text x="90" y="45" text-anchor="middle" font-size="9" fill="#666">1m</text><text x="160" y="40" text-anchor="middle" font-size="10" fill="#2563eb">30kg</text><text x="160" y="70" text-anchor="middle" font-size="9" fill="#666">?m</text></svg>`,
+    options:['0.5 m','1 m','2 m','3 m'],
+    correct:2,
+    explanation:`<p>Load × Load distance = Effort × Effort distance. 60 × 1 = 30 × d → d = 60/30 = <strong>2 m</strong>.</p>`
+  },
+  {
+    id:'mech_07', module:'mechanical', type:'mcq',
+    prompt:`<p>A wheelbarrow is an example of which class of lever?</p>`,
+    svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 100" width="220" height="100"><line x1="10" y1="70" x2="210" y2="70" stroke="#888" stroke-width="2" stroke-dasharray="4"/><rect x="60" y="45" width="80" height="25" fill="#ddd" stroke="#444" stroke-width="2" rx="3"/><text x="100" y="62" text-anchor="middle" font-size="10" fill="#222">Load (tray)</text><circle cx="70" cy="70" r="8" fill="#888"/><text x="70" y="90" text-anchor="middle" font-size="9" fill="#666">Fulcrum</text><text x="190" y="62" text-anchor="middle" font-size="10" fill="#2563eb">Effort</text></svg>`,
+    options:['First class (fulcrum between load and effort)','Second class (load between fulcrum and effort)','Third class (effort between fulcrum and load)','It is not a lever'],
+    correct:1,
+    explanation:`<p>In a wheelbarrow, the wheel axle is the <em>fulcrum</em>, the load sits in the tray between the fulcrum and the handles. This is a <strong>second-class lever</strong> — always provides mechanical advantage.</p>`
+  },
+  {
+    id:'mech_08', module:'mechanical', type:'mcq',
+    prompt:`<p>A 100 kg crate is pushed up a smooth ramp that is 5 m long and rises 1 m vertically. Approximately what force is needed to push the crate up the ramp (ignore friction, g = 10 m/s²)?</p>`,
+    svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 120" width="200" height="120"><polygon points="20,100 180,100 180,60" fill="#e8e8e0" stroke="#444" stroke-width="2"/><text x="100" y="115" text-anchor="middle" font-size="10" fill="#666">5 m</text><text x="188" y="82" text-anchor="middle" font-size="10" fill="#666">1 m</text><rect x="130" y="60" width="28" height="20" fill="#ccc" stroke="#444" stroke-width="1.5"/><text x="144" y="74" text-anchor="middle" font-size="9" fill="#222">100kg</text></svg>`,
+    options:['1000 N','500 N','200 N','100 N'],
+    correct:2,
+    explanation:`<p>Force = Weight × (height / ramp length) = (100×10) × (1/5) = 1000 × 0.2 = <strong>200 N</strong>. The ramp provides a mechanical advantage of 5.</p>`
+  },
+  {
+    id:'mech_09', module:'mechanical', type:'mcq',
+    prompt:`<p>In a simple series circuit, three identical light bulbs are connected to a battery. One bulb blows. What happens to the other two bulbs?</p>`,
+    svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 120" width="220" height="120"><rect x="10" y="50" width="30" height="20" fill="#ffe" stroke="#444" stroke-width="2" rx="3"/><text x="25" y="63" text-anchor="middle" font-size="10" fill="#222">BAT</text><line x1="40" y1="60" x2="70" y2="60" stroke="#444" stroke-width="2"/><circle cx="85" cy="60" r="10" fill="none" stroke="#444" stroke-width="2"/><text x="85" y="64" text-anchor="middle" font-size="9" fill="#222">B1</text><line x1="95" y1="60" x2="115" y2="60" stroke="#444" stroke-width="2"/><circle cx="130" cy="60" r="10" fill="none" stroke="#444" stroke-width="2"/><text x="130" y="64" text-anchor="middle" font-size="9" fill="#222">B2</text><line x1="140" y1="60" x2="160" y2="60" stroke="#444" stroke-width="2"/><circle cx="175" cy="60" r="10" fill="none" stroke="#f55" stroke-width="2"/><text x="175" y="64" text-anchor="middle" font-size="9" fill="#f55">B3✗</text><line x1="185" y1="60" x2="210" y2="60" stroke="#444" stroke-width="2"/><line x1="210" y1="60" x2="210" y2="20" stroke="#444" stroke-width="2"/><line x1="10" y1="20" x2="210" y2="20" stroke="#444" stroke-width="2"/><line x1="10" y1="20" x2="10" y2="50" stroke="#444" stroke-width="2"/></svg>`,
+    options:['They glow brighter','They go out completely','They stay the same brightness','They flicker'],
+    correct:1,
+    explanation:`<p>In a <strong>series circuit</strong>, all components share the same current path. If one bulb blows (open circuit), current stops flowing entirely. <strong>All other bulbs go out.</strong></p>`
+  },
+  {
+    id:'mech_10', module:'mechanical', type:'mcq',
+    prompt:`<p>Three identical bulbs are connected in parallel to a battery. One bulb is removed from its socket. What happens to the remaining two bulbs?</p>`,
+    svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 130" width="200" height="130"><rect x="10" y="55" width="30" height="20" fill="#ffe" stroke="#444" stroke-width="2" rx="3"/><text x="25" y="68" text-anchor="middle" font-size="10" fill="#222">BAT</text><line x1="40" y1="65" x2="60" y2="65" stroke="#444" stroke-width="2"/><line x1="60" y1="25" x2="60" y2="105" stroke="#444" stroke-width="2"/><line x1="60" y1="25" x2="80" y2="25" stroke="#444" stroke-width="2"/><line x1="60" y1="65" x2="80" y2="65" stroke="#444" stroke-width="2"/><line x1="60" y1="105" x2="80" y2="105" stroke="#444" stroke-width="2"/><circle cx="95" cy="25" r="10" fill="none" stroke="#444" stroke-width="2"/><circle cx="95" cy="65" r="10" fill="none" stroke="#444" stroke-width="2"/><circle cx="95" cy="105" r="10" fill="none" stroke="#aaa" stroke-width="1.5" stroke-dasharray="3"/><text x="95" y="29" text-anchor="middle" font-size="8">B1</text><text x="95" y="69" text-anchor="middle" font-size="8">B2</text><text x="95" y="109" text-anchor="middle" font-size="8" fill="#aaa">B3</text><line x1="105" y1="25" x2="140" y2="25" stroke="#444" stroke-width="2"/><line x1="105" y1="65" x2="140" y2="65" stroke="#444" stroke-width="2"/><line x1="105" y1="105" x2="140" y2="105" stroke="#aaa" stroke-width="1.5" stroke-dasharray="3"/><line x1="140" y1="25" x2="140" y2="105" stroke="#444" stroke-width="2"/><line x1="140" y1="65" x2="180" y2="65" stroke="#444" stroke-width="2"/><line x1="180" y1="65" x2="180" y2="20" stroke="#444" stroke-width="2"/><line x1="10" y1="20" x2="180" y2="20" stroke="#444" stroke-width="2"/><line x1="10" y1="20" x2="10" y2="55" stroke="#444" stroke-width="2"/></svg>`,
+    options:['They go out','They glow at the same brightness','They glow brighter','They glow dimmer'],
+    correct:1,
+    explanation:`<p>In a <strong>parallel circuit</strong>, each bulb has its own independent current path. Removing one bulb opens only that branch — the others remain unaffected. The remaining two bulbs continue to glow at <strong>the same brightness</strong>.</p>`
+  },
+  {
+    id:'mech_11', module:'mechanical', type:'mcq',
+    prompt:`<p>Two switches (S1 and S2) control a single lamp. The lamp only lights when BOTH switches are closed. What type of circuit connection is this?</p>`,
+    svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 100" width="220" height="100"><rect x="10" y="40" width="30" height="20" fill="#ffe" stroke="#444" stroke-width="2" rx="3"/><text x="25" y="53" text-anchor="middle" font-size="9">BAT</text><line x1="40" y1="50" x2="60" y2="50" stroke="#444" stroke-width="2"/><line x1="60" y1="50" x2="62" y2="40" stroke="#444" stroke-width="2"/><line x1="68" y1="50" x2="85" y2="50" stroke="#444" stroke-width="2"/><text x="64" y="35" text-anchor="middle" font-size="9">S1</text><line x1="85" y1="50" x2="87" y2="40" stroke="#444" stroke-width="2"/><line x1="93" y1="50" x2="115" y2="50" stroke="#444" stroke-width="2"/><text x="89" y="35" text-anchor="middle" font-size="9">S2</text><circle cx="130" cy="50" r="12" fill="none" stroke="#444" stroke-width="2"/><text x="130" y="54" text-anchor="middle" font-size="9">LAMP</text><line x1="142" y1="50" x2="200" y2="50" stroke="#444" stroke-width="2"/><line x1="200" y1="50" x2="200" y2="20" stroke="#444" stroke-width="2"/><line x1="10" y1="20" x2="200" y2="20" stroke="#444" stroke-width="2"/><line x1="10" y1="20" x2="10" y2="40" stroke="#444" stroke-width="2"/></svg>`,
+    options:['Parallel switch circuit','Series switch circuit','AND logic gate circuit','Both B and C are correct'],
+    correct:3,
+    explanation:`<p>Both B and C are correct. When two switches must both be closed for a lamp to light, they are wired in <strong>series</strong> — and this is functionally equivalent to an <strong>AND logic gate</strong>: output is ON only when input 1 AND input 2 are both ON.</p>`
+  },
+  {
+    id:'mech_12', module:'mechanical', type:'mcq',
+    prompt:`<p>A spring stretches 4 cm when a 20 N force is applied. How far will it stretch when a 35 N force is applied (assume the spring obeys Hooke's Law)?</p>`,
+    svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160" width="120" height="160"><line x1="60" y1="10" x2="60" y2="20" stroke="#444" stroke-width="2"/><path d="M60,20 Q70,25 60,30 Q50,35 60,40 Q70,45 60,50 Q50,55 60,60 Q70,65 60,70 Q50,75 60,80" stroke="#444" stroke-width="2" fill="none"/><line x1="60" y1="80" x2="60" y2="90" stroke="#444" stroke-width="2"/><rect x="35" y="90" width="50" height="30" fill="#ccc" stroke="#444" stroke-width="1.5" rx="3"/><text x="60" y="109" text-anchor="middle" font-size="11" fill="#222">35 N</text><text x="90" y="55" text-anchor="start" font-size="10" fill="#2563eb">? cm</text></svg>`,
+    options:['5.25 cm','7 cm','8.75 cm','10 cm'],
+    correct:1,
+    explanation:`<p>Spring constant k = Force / Extension = 20 N / 4 cm = 5 N/cm. For 35 N: Extension = 35 / 5 = <strong>7 cm</strong>. Hooke's Law: extension is proportional to force.</p>`
+  }
+];
+
+// ============================================================
+// SECTION 2: TIMING
+// ============================================================
+
+const MODULE_TIMES = { numeracy: 18*60, abstract: 15*60, safety: 12*60, mechanical: 10*60 };
+
+let _timerInterval = null;
+
+function startTimer(seconds, onTick, onExpire) {
+  stopTimer();
+  state.timerSecondsLeft = seconds;
+  onTick(seconds);
+  _timerInterval = setInterval(() => {
+    state.timerSecondsLeft--;
+    onTick(state.timerSecondsLeft);
+    if (state.timerSecondsLeft <= 0) { stopTimer(); onExpire(); }
+  }, 1000);
+}
+
+function stopTimer() {
+  if (_timerInterval) { clearInterval(_timerInterval); _timerInterval = null; }
+}
+
+function formatTime(s) {
+  const absS = Math.max(0, s);
+  const m = Math.floor(absS / 60);
+  const sec = absS % 60;
+  return { display: `${m}:${sec.toString().padStart(2,'0')}`, urgent: s <= 60 && s > 0 };
+}
+
+// ============================================================
+// SECTION 4: SCORING & STATE
+// ============================================================
+
+const state = {
+  mode: 'exam',
+  sessionModules: [],
+  safetyTimerOn: true,
+  questions: {},
+  answers: {},
+  flags: {},
+  moduleStartTimes: {},
+  moduleTimeTaken: {},
+  currentModule: null,
+  currentModuleIdx: 0,
+  currentQIndex: 0,
+  reviewMode: false,
+  timerSecondsLeft: 0
+};
+
+function initSession(modules, mode) {
+  state.mode = mode;
+  state.sessionModules = modules;
+  state.answers = {};
+  state.flags = {};
+  state.moduleStartTimes = {};
+  state.moduleTimeTaken = {};
+  state.questions = {};
+  state.currentModuleIdx = 0;
+  if (modules.includes('numeracy')) state.questions.numeracy = generateNumeracyBank();
+  if (modules.includes('abstract')) state.questions.abstract = generateAbstractBank();
+  if (modules.includes('safety')) state.questions.safety = SAFETY_QUESTIONS.slice();
+  if (modules.includes('mechanical')) state.questions.mechanical = MECHANICAL_QUESTIONS.slice();
+  startModule(modules[0]);
+}
+
+function startModule(key) {
+  state.currentModule = key;
+  state.currentQIndex = 0;
+  state.reviewMode = false;
+  state.moduleStartTimes[key] = Date.now();
+  stopTimer();
+  showScreen('screen-question');
+  if (state.mode === 'exam') {
+    const totalSecs = (key === 'safety' && !state.safetyTimerOn) ? null : MODULE_TIMES[key];
+    if (totalSecs !== null) {
+      startTimer(totalSecs, updateTimerDisplay, () => submitCurrentModule());
+    }
+  }
+  renderQuestionScreen();
+}
+
+function submitCurrentModule() {
+  stopTimer();
+  const key = state.currentModule;
+  state.moduleTimeTaken[key] = Math.round((Date.now() - state.moduleStartTimes[key]) / 1000);
+  state.reviewMode = true;
+  renderReviewScreen(key);
+  showScreen('screen-review');
+}
+
+function advanceModule() {
+  state.currentModuleIdx++;
+  if (state.currentModuleIdx < state.sessionModules.length) {
+    startModule(state.sessionModules[state.currentModuleIdx]);
+  } else {
+    stopTimer();
+    renderResults();
+    showScreen('screen-results');
+  }
+}
+
+function scoreModule(key) {
+  const qs = state.questions[key] || [];
+  let correct = 0;
+  qs.forEach(q => {
+    if (state.answers[q.id] !== undefined && state.answers[q.id] === q.correct) correct++;
+  });
+  const total = qs.length;
+  const pct = total > 0 ? Math.round(correct / total * 100) : 0;
+  return { correct, total, pct, timeTaken: state.moduleTimeTaken[key] || 0 };
+}
+
+function scoreSession() {
+  let totalCorrect = 0, totalQuestions = 0;
+  state.sessionModules.forEach(key => {
+    const s = scoreModule(key);
+    totalCorrect += s.correct;
+    totalQuestions += s.total;
+  });
+  const pct = totalQuestions > 0 ? Math.round(totalCorrect / totalQuestions * 100) : 0;
+  const band = pct >= 80 ? 'Strong' : pct >= 65 ? 'Solid' : 'Keep Practising';
+  return { totalCorrect, totalQuestions, pct, band };
+}
+
+function getCurrentQuestion() {
+  const qs = state.questions[state.currentModule] || [];
+  return qs[state.currentQIndex] || null;
+}
+
+function selectAnswer(qId, optIdx) {
+  if (state.reviewMode) return;
+  if (state.mode === 'practice' && state.answers[qId] !== undefined) return;
+  state.answers[qId] = optIdx;
+  renderQuestionScreen();
+}
+
+function toggleFlag(qId) {
+  if (state.reviewMode) return;
+  state.flags[qId] = !state.flags[qId];
+  renderQuestionScreen();
+}
+
+function goNext() {
+  const qs = state.questions[state.currentModule] || [];
+  if (state.currentQIndex < qs.length - 1) {
+    state.currentQIndex++;
+    if (state.reviewMode) renderReviewJumpQuestion();
+    else renderQuestionScreen();
+  } else if (!state.reviewMode) {
+    submitCurrentModule();
+  }
+}
+
+function goPrev() {
+  if (state.currentQIndex > 0) {
+    state.currentQIndex--;
+    if (state.reviewMode) renderReviewJumpQuestion();
+    else renderQuestionScreen();
+  }
+}
+
+function jumpToQuestion(idx) {
+  state.currentQIndex = idx;
+  state.reviewMode = true;
+  showScreen('screen-question');
+  renderReviewJumpQuestion();
+}
+
+function renderReviewJumpQuestion() {
+  const q = getCurrentQuestion();
+  if (!q) return;
+  const qs = state.questions[state.currentModule] || [];
+  renderQuestionScreen(true);
+}
+
+// ============================================================
+// SECTION 3: UI
+// ============================================================
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
+  document.getElementById(id).style.display = 'block';
+}
+
+function updateTimerDisplay(secs) {
+  const el = document.getElementById('timer-display');
+  if (!el) return;
+  const { display, urgent } = formatTime(secs);
+  el.textContent = display;
+  el.className = 'timer' + (urgent ? ' urgent' : '');
+}
+
+function renderHome() {
+  const availableModules = [
+    { key: 'numeracy', label: 'Numeracy', desc: '20 questions · 18 min' },
+    { key: 'abstract', label: 'Abstract Reasoning', desc: '20 questions · 15 min' },
+    { key: 'safety', label: 'Safety Awareness', desc: '15 questions · 12 min' },
+    { key: 'mechanical', label: 'Mechanical Reasoning', desc: '12 questions · 10 min' }
+  ];
+  const el = document.getElementById('screen-home');
+  el.innerHTML = `
+  <div class="container" style="padding: 2rem 1rem">
+    <h1>Bright Spark Aptitude Simulator</h1>
+    <p style="color:var(--muted);margin-bottom:1.5rem">Ausgrid apprentice selection test practice — runs fully offline</p>
+    <div class="home-card">
+      <h3>Mode</h3>
+      <div class="mode-row">
+        <button class="mode-btn ${state.mode==='exam'?'active':''}" onclick="setMode('exam')">
+          <strong>Exam</strong><br><small>Timer · no feedback until review</small>
+        </button>
+        <button class="mode-btn ${state.mode==='practice'?'active':''}" onclick="setMode('practice')">
+          <strong>Practice</strong><br><small>Instant feedback · no timer</small>
+        </button>
+      </div>
+    </div>
+    <div class="home-card">
+      <h3>Select Modules</h3>
+      <div class="module-select-grid" id="module-grid">
+        ${availableModules.map(m => `
+          <div class="module-toggle ${['numeracy','abstract','safety','mechanical'].includes(m.key)?'active':''}"
+               id="mod-${m.key}" onclick="toggleModule('${m.key}')">
+            <div>
+              <div>${m.label}</div>
+              <div style="font-size:0.8rem;color:var(--muted);font-weight:400">${m.desc}</div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+      <div id="safety-timer-row" style="margin-top:0.5rem">
+        <label class="checkbox-row">
+          <input type="checkbox" id="safety-timer-cb" ${state.safetyTimerOn?'checked':''} onchange="state.safetyTimerOn=this.checked">
+          <span>Enable Safety Awareness timer</span>
+        </label>
+      </div>
+      <div style="margin-top:1rem;display:flex;gap:0.75rem;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="startFromHome()">Start Selected</button>
+        <button class="btn btn-ghost" onclick="startFullExam()">Full Exam (all 4)</button>
+      </div>
+    </div>
+  </div>`;
+  // track selected modules
+  window._selectedModules = ['numeracy', 'abstract', 'safety', 'mechanical'];
+  updateModuleToggles();
+}
+
+window._selectedModules = ['numeracy', 'abstract', 'safety', 'mechanical'];
+
+function updateModuleToggles() {
+  ['numeracy','abstract','safety','mechanical'].forEach(k => {
+    const el = document.getElementById(`mod-${k}`);
+    if (!el) return;
+    if (window._selectedModules.includes(k)) el.classList.add('active');
+    else el.classList.remove('active');
+  });
+  const safetyRow = document.getElementById('safety-timer-row');
+  if (safetyRow) {
+    const show = window._selectedModules.includes('safety') || window._selectedModules.length === 4;
+    safetyRow.style.display = show ? '' : 'none';
+  }
+}
+
+function toggleModule(key) {
+  const idx = window._selectedModules.indexOf(key);
+  if (idx >= 0) {
+    if (window._selectedModules.length > 1) window._selectedModules.splice(idx, 1);
+  } else {
+    window._selectedModules.push(key);
+  }
+  updateModuleToggles();
+}
+
+function setMode(m) {
+  state.mode = m;
+  document.querySelectorAll('.mode-btn').forEach((b,i) => {
+    b.classList.toggle('active', (i === 0 && m === 'exam') || (i === 1 && m === 'practice'));
+  });
+}
+
+function startFromHome() {
+  const modules = ['numeracy','abstract','safety','mechanical'].filter(k => window._selectedModules.includes(k));
+  if (modules.length === 0) { alert('Please select at least one module.'); return; }
+  initSession(modules, state.mode);
+}
+
+function startFullExam() {
+  initSession(['numeracy','abstract','safety','mechanical'], state.mode);
+}
+
+function renderQuestionScreen(fromReviewJump) {
+  const q = getCurrentQuestion();
+  if (!q) return;
+  const qs = state.questions[state.currentModule] || [];
+  const total = qs.length;
+  const idx = state.currentQIndex;
+  const isFlagged = !!state.flags[q.id];
+  const hasAnswer = state.answers[q.id] !== undefined;
+  const answered = state.answers[q.id];
+  const moduleNames = { numeracy: 'Numeracy', abstract: 'Abstract Reasoning', safety: 'Safety Awareness', mechanical: 'Mechanical Reasoning' };
+  const isReviewJump = state.reviewMode;
+
+  let optionsHtml = '';
+  if (q.isAbstract && Array.isArray(q.options) && q.options[0] && q.options[0].includes('<svg')) {
+    optionsHtml = `<div class="abs-options-grid">`;
+    q.options.forEach((opt, i) => {
+      let cls = 'abs-option-btn';
+      if (hasAnswer) {
+        if (i === answered && i === q.correct) cls += ' correct';
+        else if (i === answered && i !== q.correct) cls += ' incorrect';
+        else if (i === q.correct && (isReviewJump || state.mode === 'practice')) cls += ' correct';
+        else if (i === answered) cls += ' selected';
+      }
+      const disabled = (state.mode === 'practice' && hasAnswer) || isReviewJump ? 'disabled' : '';
+      optionsHtml += `<button class="${cls}" ${disabled} onclick="selectAnswer('${q.id}', ${i})">${opt}</button>`;
+    });
+    optionsHtml += `</div>`;
+  } else {
+    q.options.forEach((opt, i) => {
+      let cls = 'option-btn';
+      if (hasAnswer || isReviewJump) {
+        if (i === answered && i === q.correct) cls += ' correct';
+        else if (i === answered && i !== q.correct) cls += ' incorrect';
+        else if (i === q.correct && (isReviewJump || state.mode === 'practice')) cls += ' correct';
+        else if (i === answered) cls += ' selected';
+      } else if (!hasAnswer && !isReviewJump) {
+        // no answer yet, no extra class
+      }
+      const disabled = (state.mode === 'practice' && hasAnswer) || isReviewJump ? 'disabled' : '';
+      optionsHtml += `<button class="${cls}" ${disabled} onclick="selectAnswer('${q.id}', ${i})">${opt}</button>`;
+    });
+  }
+
+  let feedbackHtml = '';
+  if ((state.mode === 'practice' && hasAnswer) || isReviewJump) {
+    const isCorrect = answered === q.correct;
+    const feedClass = (answered === undefined) ? '' : (isCorrect ? '' : ' wrong');
+    if (answered !== undefined) {
+      feedbackHtml = `<div class="feedback-box${feedClass}">
+        <strong>${isCorrect ? '✓ Correct' : '✗ Incorrect'}</strong>
+        ${q.explanation}
+      </div>`;
+    } else if (isReviewJump) {
+      feedbackHtml = `<div class="feedback-box wrong"><strong>Not answered</strong>${q.explanation}</div>`;
+    }
+  }
+
+  const pct = Math.round((idx + 1) / total * 100);
+  const showTimer = state.mode === 'exam' && !isReviewJump && !(state.currentModule === 'safety' && !state.safetyTimerOn);
+  const { display: tDisplay, urgent: tUrgent } = formatTime(state.timerSecondsLeft);
+
+  document.getElementById('screen-question').innerHTML = `
+    <div class="question-header">
+      <div>
+        <div class="module-label">${moduleNames[state.currentModule] || state.currentModule}</div>
+        <div class="q-counter">Question ${idx+1} / ${total}</div>
+      </div>
+      <div style="text-align:right">
+        ${showTimer ? `<div id="timer-display" class="timer${tUrgent?' urgent':''}">${tDisplay}</div>` : ''}
+        ${isReviewJump ? '<span style="font-size:0.85rem;color:var(--muted)">Review Mode</span>' : ''}
+      </div>
+    </div>
+    <div class="container" style="padding:1rem">
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+      <div style="margin:1rem 0">
+        <div>${q.svg ? q.svg : ''}</div>
+        <div>${q.prompt}</div>
+      </div>
+      ${optionsHtml}
+      ${feedbackHtml}
+      <div class="nav-row">
+        <button class="btn btn-ghost" onclick="goPrev()" ${idx===0?'disabled':''}>&#8592; Prev</button>
+        ${!isReviewJump ? `<button class="flag-btn${isFlagged?' flagged':''}" onclick="toggleFlag('${q.id}')">&#9873; ${isFlagged?'Flagged':'Flag'}</button>` : ''}
+        ${idx < total-1
+          ? `<button class="btn btn-primary" onclick="goNext()">Next &#8594;</button>`
+          : (!isReviewJump
+              ? `<button class="btn btn-primary" onclick="submitCurrentModule()">Submit Module</button>`
+              : `<button class="btn btn-ghost" onclick="showScreen('screen-review');renderReviewScreen(state.currentModule)">Back to Review</button>`)
+        }
+        ${isReviewJump ? `<button class="btn btn-ghost" onclick="showScreen('screen-review');renderReviewScreen(state.currentModule)">&#9776; Review Grid</button>` : ''}
+      </div>
+    </div>`;
+}
+
+function renderReviewScreen(key) {
+  const qs = state.questions[key] || [];
+  const score = scoreModule(key);
+  const moduleNames = { numeracy: 'Numeracy', abstract: 'Abstract Reasoning', safety: 'Safety Awareness', mechanical: 'Mechanical Reasoning' };
+
+  let gridHtml = '<div class="review-grid">';
+  qs.forEach((q, i) => {
+    const ans = state.answers[q.id];
+    const isFlagged = !!state.flags[q.id];
+    let cls = 'grid-cell';
+    if (ans === undefined) cls += ' unanswered';
+    else if (ans === q.correct) cls += ' correct';
+    else cls += ' incorrect';
+    if (isFlagged) cls += ' flagged';
+    gridHtml += `<button class="${cls}" onclick="jumpToQuestion(${i})" title="Q${i+1}">${i+1}</button>`;
+  });
+  gridHtml += '</div>';
+
+  const timeTxt = score.timeTaken ? `Time: ${Math.floor(score.timeTaken/60)}m ${score.timeTaken%60}s` : '';
+  const bandClass = score.pct >= 80 ? 'band-strong' : score.pct >= 65 ? 'band-solid' : 'band-low';
+  const band = score.pct >= 80 ? 'Strong' : score.pct >= 65 ? 'Solid' : 'Keep Practising';
+
+  const isLast = state.currentModuleIdx >= state.sessionModules.length - 1;
+
+  document.getElementById('screen-review').innerHTML = `
+    <div class="container" style="padding:1.5rem 1rem">
+      <h2>${moduleNames[key]} — Module Complete</h2>
+      <div class="score-card">
+        <div style="font-size:1.8rem;font-weight:800">${score.correct}/${score.total} <span style="font-size:1rem;color:var(--muted)">(${score.pct}%)</span></div>
+        <div class="${bandClass}" style="font-size:1.1rem;margin-top:0.25rem">${band}</div>
+        ${timeTxt ? `<div style="color:var(--muted);font-size:0.9rem;margin-top:0.25rem">${timeTxt}</div>` : ''}
+      </div>
+      <div class="section-title">Question Review</div>
+      <div style="display:flex;gap:1rem;font-size:0.85rem;margin-bottom:0.5rem;flex-wrap:wrap">
+        <span><span style="display:inline-block;width:14px;height:14px;background:var(--correct);border-radius:2px;vertical-align:middle"></span> Correct</span>
+        <span><span style="display:inline-block;width:14px;height:14px;background:var(--incorrect);border-radius:2px;vertical-align:middle"></span> Incorrect</span>
+        <span><span style="display:inline-block;width:14px;height:14px;background:#e5e5e0;border-radius:2px;vertical-align:middle"></span> Unanswered</span>
+        <span><span style="display:inline-block;width:14px;height:14px;border:2px solid var(--flagged);border-radius:2px;vertical-align:middle"></span> Flagged</span>
+      </div>
+      ${gridHtml}
+      <div class="nav-row" style="margin-top:1.5rem">
+        <button class="btn btn-ghost" onclick="jumpToQuestion(0)">View Solutions</button>
+        ${isLast
+          ? `<button class="btn btn-primary" onclick="advanceModule()">See Results</button>`
+          : `<button class="btn btn-primary" onclick="advanceModule()">Next Module &#8594;</button>`
+        }
+      </div>
+    </div>`;
+}
+
+function renderResults() {
+  const overall = scoreSession();
+  const moduleNames = { numeracy: 'Numeracy', abstract: 'Abstract Reasoning', safety: 'Safety Awareness', mechanical: 'Mechanical Reasoning' };
+  const bandClass = overall.band === 'Strong' ? 'band-strong' : overall.band === 'Solid' ? 'band-solid' : 'band-low';
+
+  let moduleCardsHtml = '';
+  state.sessionModules.forEach(key => {
+    const s = scoreModule(key);
+    const bc = s.pct >= 80 ? 'band-strong' : s.pct >= 65 ? 'band-solid' : 'band-low';
+    const bd = s.pct >= 80 ? 'Strong' : s.pct >= 65 ? 'Solid' : 'Keep Practising';
+    const timeTxt = s.timeTaken ? `${Math.floor(s.timeTaken/60)}m ${s.timeTaken%60}s` : '—';
+    moduleCardsHtml += `<div class="score-card">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <strong>${moduleNames[key]}</strong>
+        <span style="color:var(--muted);font-size:0.85rem">${timeTxt}</span>
+      </div>
+      <div style="font-size:1.4rem;font-weight:700;margin-top:0.25rem">${s.correct}/${s.total} <span style="font-size:0.9rem;color:var(--muted)">(${s.pct}%)</span></div>
+      <div class="${bc}">${bd}</div>
+    </div>`;
+  });
+
+  let solutionsHtml = '';
+  state.sessionModules.forEach(key => {
+    const qs = state.questions[key] || [];
+    solutionsHtml += `<h3 style="margin:1.5rem 0 0.75rem">${moduleNames[key]}</h3>`;
+    qs.forEach((q, i) => {
+      const ans = state.answers[q.id];
+      const isCorrect = ans === q.correct;
+      const notAnswered = ans === undefined;
+      const cardClass = notAnswered ? 'solution-card' : (isCorrect ? 'solution-card correct' : 'solution-card incorrect');
+      const statusTag = notAnswered
+        ? '<span class="tag">Not answered</span>'
+        : (isCorrect ? '<span class="tag correct">Correct</span>' : '<span class="tag incorrect">Incorrect</span>');
+
+      const myAnsText = ans !== undefined ? q.options[ans] : '—';
+      const correctAnsText = q.options[q.correct];
+      const myAnsDisplay = (q.isAbstract && typeof myAnsText === 'string' && myAnsText.includes('<svg'))
+        ? `<div style="display:inline-block">${myAnsText}</div>` : myAnsText;
+      const corrAnsDisplay = (q.isAbstract && typeof correctAnsText === 'string' && correctAnsText.includes('<svg'))
+        ? `<div style="display:inline-block">${correctAnsText}</div>` : correctAnsText;
+
+      solutionsHtml += `<div class="${cardClass}">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.5rem">
+          <strong>Q${i+1}</strong>${statusTag}
+        </div>
+        <div style="margin-bottom:0.5rem">${q.prompt}</div>
+        ${q.svg ? `<div style="margin-bottom:0.5rem">${q.svg}</div>` : ''}
+        ${!notAnswered ? `<div style="font-size:0.9rem;margin-bottom:0.25rem"><span style="color:var(--muted)">Your answer:</span> ${myAnsDisplay}</div>` : ''}
+        <div style="font-size:0.9rem;margin-bottom:0.5rem"><span style="color:var(--muted)">Correct answer:</span> ${corrAnsDisplay}</div>
+        <hr>
+        ${q.explanation}
+      </div>`;
+    });
+  });
+
+  document.getElementById('screen-results').innerHTML = `
+    <div class="container" style="padding:1.5rem 1rem">
+      <div class="results-overall">
+        <div style="font-size:0.9rem;opacity:0.8;margin-bottom:0.25rem">Overall Score</div>
+        <h2>${overall.totalCorrect}/${overall.totalQuestions}</h2>
+        <div style="font-size:1.3rem;opacity:0.9">${overall.pct}%</div>
+        <div class="${bandClass}" style="font-size:1.2rem;margin-top:0.5rem;background:rgba(255,255,255,0.15);padding:0.4rem 1rem;border-radius:4px;display:inline-block">${overall.band}</div>
+      </div>
+      <div style="background:var(--surface);border-radius:var(--radius);padding:1rem;border:1px solid var(--border);margin-bottom:1rem;font-size:0.95rem">
+        <strong>Benchmark:</strong> Strong ≥80% &nbsp;|&nbsp; Solid 65–79% &nbsp;|&nbsp; Keep Practising &lt;65%
+      </div>
+      <h2>Module Results</h2>
+      ${moduleCardsHtml}
+      <div class="solutions-section">
+        <h2>Worked Solutions</h2>
+        ${solutionsHtml}
+      </div>
+      <div style="margin-top:2rem;text-align:center">
+        <button class="btn btn-primary" onclick="renderHome();showScreen('screen-home')">Try Again</button>
+      </div>
+    </div>`;
+}
+
+// ============================================================
+// KEYBOARD HANDLING
+// ============================================================
+
+document.addEventListener('keydown', e => {
+  const activeScreen = Array.from(document.querySelectorAll('.screen')).find(s => s.style.display !== 'none');
+  if (!activeScreen || activeScreen.id !== 'screen-question') return;
+  if (state.reviewMode) {
+    if (e.key === 'ArrowRight' || e.key === 'Enter') goNext();
+    if (e.key === 'ArrowLeft') goPrev();
+    return;
+  }
+  const q = getCurrentQuestion();
+  if (!q) return;
+  if (e.key === '1') selectAnswer(q.id, 0);
+  if (e.key === '2') selectAnswer(q.id, 1);
+  if (e.key === '3') selectAnswer(q.id, 2);
+  if (e.key === '4') selectAnswer(q.id, 3);
+  if (e.key === 'ArrowRight' || e.key === 'Enter') goNext();
+  if (e.key === 'ArrowLeft') goPrev();
+  if (e.key === 'f' || e.key === 'F') toggleFlag(q.id);
+});
+
+// ============================================================
+// INIT
+// ============================================================
+renderHome();
+showScreen('screen-home');
+</script>
+</body>
+</html>
