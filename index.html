@@ -6,118 +6,211 @@
   <title>Bright Spark Aptitude Simulator</title>
   <style>
 :root {
-  --bg: #f5f5f0; --surface: #fff; --border: #d0d0cc;
-  --text: #1a1a1a; --muted: #666; --accent: #2563eb;
-  --correct: #16a34a; --incorrect: #dc2626; --flagged: #d97706;
-  --radius: 8px;
+  --bg:#f4f6f8; --surface:#fff; --surface-2:#f8fafc; --ink:#0f172a; --muted:#64748b;
+  --accent:#1d4ed8; --accent-soft:#eff6ff; --border:#e2e8f0;
+  --correct:#16a34a; --correct-soft:#f0fdf4; --incorrect:#dc2626; --incorrect-soft:#fef2f2;
+  --flagged:#d97706; --warn-soft:#fffbeb; --radius:12px; --radius-sm:8px;
+  --shadow:0 1px 3px rgba(15,23,42,.08),0 1px 2px rgba(15,23,42,.04);
+  --shadow-lg:0 4px 12px rgba(15,23,42,.10);
+  /* legacy aliases kept for any inline references */
+  --text:var(--ink);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-       background: var(--bg); color: var(--text); font-size: 16px; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+       background: var(--bg); color: var(--ink); font-size: 16px; line-height: 1.6; }
 .screen { min-height: 100vh; padding: 1rem; }
-.container { max-width: 720px; margin: 0 auto; }
-.btn { display: inline-block; padding: 0.75rem 1.5rem; border-radius: var(--radius);
-       border: none; cursor: pointer; font-size: 1rem; font-weight: 600; }
+.container { max-width: 760px; margin: 0 auto; }
+
+/* ---- Top nav ---- */
+#topnav { position: sticky; top: 0; z-index: 50; display: flex; align-items: center;
+          justify-content: space-between; gap: 0.5rem; padding: 0.6rem 1rem;
+          background: var(--surface); border-bottom: 1px solid var(--border); box-shadow: var(--shadow); }
+.nav-brand { font-weight: 800; font-size: 1.1rem; color: var(--ink); display: flex; align-items: center; gap: 0.35rem; }
+.nav-links { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+.nav-btn { display: inline-block; padding: 0.45rem 0.85rem; border-radius: var(--radius-sm);
+           border: 1px solid transparent; background: transparent; color: var(--muted);
+           cursor: pointer; font-size: 0.9rem; font-weight: 600; text-decoration: none;
+           transition: background 0.15s, color 0.15s, transform 0.1s; }
+.nav-btn:hover { background: var(--accent-soft); color: var(--accent); transform: translateY(-1px); }
+.nav-btn.nav-cta { background: var(--accent); color: #fff; }
+.nav-btn.nav-cta:hover { background: #1740b8; color: #fff; }
+.nav-btn:focus-visible { outline: 3px solid var(--accent-soft); outline-offset: 1px; }
+
+.btn { display: inline-flex; align-items: center; justify-content: center;
+       padding: 0.75rem 1.5rem; border-radius: var(--radius-sm);
+       border: none; cursor: pointer; font-size: 1rem; font-weight: 600; min-height: 44px;
+       transition: transform 0.1s, box-shadow 0.15s, background 0.15s; }
+.btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: var(--shadow); }
+.btn:focus-visible { outline: 3px solid var(--accent-soft); outline-offset: 2px; }
+.btn:disabled { opacity: 0.5; cursor: default; }
 .btn-primary { background: var(--accent); color: #fff; }
-.btn-ghost { background: transparent; border: 2px solid var(--border); color: var(--text); }
+.btn-ghost { background: var(--surface); border: 2px solid var(--border); color: var(--ink); }
 .btn-danger { background: var(--incorrect); color: #fff; }
-.option-btn { display: block; width: 100%; text-align: left;
+
+.option-btn { display: flex; align-items: center; gap: 0.75rem; width: 100%; text-align: left;
               padding: 0.85rem 1.2rem; margin-bottom: 0.5rem; min-height: 44px;
-              border: 2px solid var(--border); border-radius: var(--radius);
-              background: var(--surface); cursor: pointer; font-size: 1rem; }
-.option-btn:hover:not(:disabled) { border-color: var(--accent); }
-.option-btn.selected { border-color: var(--accent); background: #eff6ff; }
-.option-btn.correct { border-color: var(--correct); background: #f0fdf4; }
-.option-btn.incorrect { border-color: var(--incorrect); background: #fef2f2; }
+              border: 2px solid var(--border); border-radius: var(--radius-sm);
+              background: var(--surface); cursor: pointer; font-size: 1rem; color: var(--ink);
+              transition: border-color 0.15s, background 0.15s, transform 0.1s; }
+.option-btn:hover:not(:disabled) { border-color: var(--accent); transform: translateY(-1px); }
+.option-btn:focus-visible { outline: 3px solid var(--accent-soft); outline-offset: 1px; }
+.option-btn.selected { border-color: var(--accent); background: var(--accent-soft); }
+.option-btn.correct { border-color: var(--correct); background: var(--correct-soft); }
+.option-btn.incorrect { border-color: var(--incorrect); background: var(--incorrect-soft); }
 .option-btn:disabled { cursor: default; }
+.opt-badge { flex: 0 0 auto; width: 28px; height: 28px; border-radius: 6px;
+             background: var(--surface-2); border: 1px solid var(--border); color: var(--muted);
+             display: inline-flex; align-items: center; justify-content: center;
+             font-weight: 700; font-size: 0.85rem; }
+.option-btn.selected .opt-badge { background: var(--accent); color: #fff; border-color: var(--accent); }
+.option-btn.correct .opt-badge { background: var(--correct); color: #fff; border-color: var(--correct); }
+.option-btn.incorrect .opt-badge { background: var(--incorrect); color: #fff; border-color: var(--incorrect); }
+.opt-text { flex: 1 1 auto; }
+.opt-icon { flex: 0 0 auto; font-weight: 700; }
+.option-btn.correct .opt-icon { color: var(--correct); }
+.option-btn.incorrect .opt-icon { color: var(--incorrect); }
+
 .timer { font-size: 1.5rem; font-weight: 700; font-variant-numeric: tabular-nums; }
 .timer.urgent { color: var(--incorrect); animation: pulse 1s infinite; }
 @keyframes pulse { 50% { opacity: 0.5; } }
-.progress-bar { height: 4px; background: var(--border); border-radius: 2px; margin: 0.5rem 0; }
-.progress-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.3s; }
-.grid-cell { width: 2.5rem; height: 2.5rem; border-radius: 4px; border: 2px solid var(--border);
-             cursor: pointer; font-weight: 700; font-size: 0.85rem; background: var(--surface); }
+.progress-bar { height: 8px; background: var(--border); border-radius: 4px; margin: 0.5rem 0; overflow: hidden; }
+.progress-fill { height: 100%; background: var(--accent); border-radius: 4px; transition: width 0.3s; }
+.progress-label { font-size: 0.8rem; color: var(--muted); margin-bottom: 0.5rem; }
+.grid-cell { width: 2.5rem; height: 2.5rem; border-radius: 6px; border: 2px solid var(--border);
+             cursor: pointer; font-weight: 700; font-size: 0.85rem; background: var(--surface);
+             transition: transform 0.1s; }
+.grid-cell:hover { transform: translateY(-1px); }
 .grid-cell.correct { background: var(--correct); color: #fff; border-color: var(--correct); }
 .grid-cell.incorrect { background: var(--incorrect); color: #fff; border-color: var(--incorrect); }
-.grid-cell.unanswered { background: #e5e5e0; }
+.grid-cell.unanswered { background: #e5e7eb; }
 .grid-cell.flagged { outline: 3px solid var(--flagged); outline-offset: 1px; }
 .feedback-box { margin-top: 1rem; padding: 1rem; border-radius: var(--radius);
-                border-left: 4px solid var(--correct); background: #f0fdf4; }
-.feedback-box.wrong { border-color: var(--incorrect); background: #fef2f2; }
+                border-left: 4px solid var(--correct); background: var(--correct-soft); box-shadow: var(--shadow); }
+.feedback-box.wrong { border-color: var(--incorrect); background: var(--incorrect-soft); }
+.hint-box { margin-top: 0.75rem; padding: 0.85rem 1rem; border-radius: var(--radius);
+            border-left: 4px solid var(--flagged); background: var(--warn-soft); }
+.hint-btn { background: var(--warn-soft); border: 2px solid #fcd34d; color: #92400e;
+            border-radius: var(--radius-sm); padding: 0.5rem 1rem; cursor: pointer; font-weight: 600;
+            font-size: 0.9rem; margin-top: 0.75rem; transition: transform 0.1s; }
+.hint-btn:hover { transform: translateY(-1px); }
+.mistake-line { margin-top: 0.5rem; color: #92400e; font-size: 0.92rem; }
 .solution-card { background: var(--surface); border-radius: var(--radius);
-                 border: 1px solid var(--border); padding: 1.25rem; margin-bottom: 1rem; }
+                 border: 1px solid var(--border); padding: 1.25rem; margin-bottom: 1rem; box-shadow: var(--shadow); }
 .solution-card.correct { border-left: 4px solid var(--correct); }
 .solution-card.incorrect { border-left: 4px solid var(--incorrect); }
 .score-card { background: var(--surface); border-radius: var(--radius); padding: 1.25rem;
-              border: 1px solid var(--border); margin-bottom: 1rem; }
+              border: 1px solid var(--border); margin-bottom: 1rem; box-shadow: var(--shadow); }
 .band-strong { color: var(--correct); font-weight: 700; }
 .band-solid { color: var(--accent); font-weight: 700; }
 .band-low { color: var(--incorrect); font-weight: 700; }
 svg text { font-family: -apple-system, sans-serif; }
 .abs-options-grid { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.5rem; }
-.abs-option-btn { border: 2px solid var(--border); border-radius: var(--radius);
-                  background: var(--surface); cursor: pointer; padding: 4px;
-                  display: inline-flex; align-items: center; justify-content: center; min-width: 90px; min-height: 90px; }
-.abs-option-btn:hover:not(:disabled) { border-color: var(--accent); }
-.abs-option-btn.selected { border-color: var(--accent); background: #eff6ff; }
-.abs-option-btn.correct { border-color: var(--correct); background: #f0fdf4; }
-.abs-option-btn.incorrect { border-color: var(--incorrect); background: #fef2f2; }
+.abs-option-btn { border: 2px solid var(--border); border-radius: var(--radius-sm);
+                  background: var(--surface); cursor: pointer; padding: 4px 4px 2px;
+                  display: inline-flex; flex-direction: column; align-items: center; justify-content: center;
+                  min-width: 90px; min-height: 96px; transition: border-color 0.15s, transform 0.1s; }
+.abs-option-btn:hover:not(:disabled) { border-color: var(--accent); transform: translateY(-1px); }
+.abs-option-btn:focus-visible { outline: 3px solid var(--accent-soft); outline-offset: 1px; }
+.abs-option-btn.selected { border-color: var(--accent); background: var(--accent-soft); }
+.abs-option-btn.correct { border-color: var(--correct); background: var(--correct-soft); }
+.abs-option-btn.incorrect { border-color: var(--incorrect); background: var(--incorrect-soft); }
 .abs-option-btn:disabled { cursor: default; }
+.abs-badge { font-size: 0.78rem; font-weight: 700; color: var(--muted); margin-top: 2px; }
+.abs-option-btn.selected .abs-badge { color: var(--accent); }
+.abs-option-btn.correct .abs-badge { color: var(--correct); }
+.abs-option-btn.incorrect .abs-badge { color: var(--incorrect); }
 .seq-display { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem; }
 .seq-item { text-align: center; }
 .seq-label { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
 .question-header { display: flex; justify-content: space-between; align-items: center;
-                   padding: 0.75rem 1rem; background: var(--surface); border-bottom: 1px solid var(--border);
-                   position: sticky; top: 0; z-index: 10; }
-.module-label { font-weight: 700; font-size: 0.9rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+                   padding: 0.85rem 1rem; background: var(--surface); border-bottom: 1px solid var(--border);
+                   position: sticky; top: 0; z-index: 10; box-shadow: var(--shadow); }
+.module-label { font-weight: 700; font-size: 0.85rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
 .q-counter { font-weight: 600; }
 .nav-row { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem; }
-.flag-btn { background: transparent; border: 2px solid var(--border); border-radius: var(--radius);
-            padding: 0.5rem 1rem; cursor: pointer; font-size: 0.9rem; font-weight: 600; }
-.flag-btn.flagged { border-color: var(--flagged); color: var(--flagged); background: #fffbeb; }
+.flag-btn { background: var(--surface); border: 2px solid var(--border); border-radius: var(--radius-sm);
+            padding: 0.5rem 1rem; cursor: pointer; font-size: 0.9rem; font-weight: 600; min-height: 44px; }
+.flag-btn.flagged { border-color: var(--flagged); color: var(--flagged); background: var(--warn-soft); }
 .home-card { background: var(--surface); border-radius: var(--radius); padding: 1.5rem;
-             border: 1px solid var(--border); margin-bottom: 1rem; }
+             border: 1px solid var(--border); margin-bottom: 1rem; box-shadow: var(--shadow); }
 .module-select-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin: 1rem 0; }
 .module-toggle { display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1rem;
-                 border: 2px solid var(--border); border-radius: var(--radius); cursor: pointer;
-                 background: var(--surface); font-weight: 600; }
-.module-toggle.active { border-color: var(--accent); background: #eff6ff; color: var(--accent); }
+                 border: 2px solid var(--border); border-radius: var(--radius-sm); cursor: pointer;
+                 background: var(--surface); font-weight: 600; transition: border-color 0.15s, background 0.15s; }
+.module-toggle.active { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
 .mode-row { display: flex; gap: 1rem; margin: 1rem 0; }
-.mode-btn { flex: 1; padding: 0.75rem; border: 2px solid var(--border); border-radius: var(--radius);
+.mode-btn { flex: 1; padding: 0.75rem; border: 2px solid var(--border); border-radius: var(--radius-sm);
             background: var(--surface); cursor: pointer; font-weight: 600; text-align: center; }
-.mode-btn.active { border-color: var(--accent); background: #eff6ff; color: var(--accent); }
+.mode-btn.active { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
 .review-grid { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 1rem 0; }
 .section-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 0.75rem; }
 .results-overall { background: var(--accent); color: #fff; border-radius: var(--radius);
-                   padding: 1.5rem; text-align: center; margin-bottom: 1.5rem; }
+                   padding: 1.5rem; text-align: center; margin-bottom: 1.5rem; box-shadow: var(--shadow-lg); }
 .results-overall h2 { font-size: 2rem; }
 .tag { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 4px;
-       font-size: 0.8rem; font-weight: 700; background: #e5e5e0; color: var(--text); }
+       font-size: 0.8rem; font-weight: 700; background: #e5e7eb; color: var(--ink); }
 .tag.correct { background: #dcfce7; color: var(--correct); }
 .tag.incorrect { background: #fee2e2; color: var(--incorrect); }
 hr { border: none; border-top: 1px solid var(--border); margin: 1rem 0; }
 p { margin-bottom: 0.5rem; line-height: 1.6; }
-h1 { font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; }
-h2 { font-size: 1.4rem; font-weight: 700; margin-bottom: 0.5rem; }
-h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem; }
+h1 { font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; line-height: 1.25; }
+h2 { font-size: 1.45rem; font-weight: 700; margin-bottom: 0.5rem; line-height: 1.3; }
+h3 { font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem; line-height: 1.35; }
 table { border-collapse: collapse; width: 100%; margin: 0.75rem 0; font-size: 0.95rem; }
 th, td { border: 1px solid var(--border); padding: 0.5rem 0.75rem; }
-th { background: #f0f0eb; font-weight: 700; }
+th { background: var(--surface-2); font-weight: 700; }
 .checkbox-row { display: flex; align-items: center; gap: 0.5rem; margin: 0.5rem 0; cursor: pointer; }
 .solutions-section { margin-top: 2rem; }
-@media (max-width: 480px) {
+.inline-error { color: var(--incorrect); font-weight: 600; font-size: 0.9rem; margin-top: 0.5rem; }
+/* Study guide */
+.study-section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+                 margin-bottom: 0.85rem; box-shadow: var(--shadow); overflow: hidden; }
+.study-section > summary { cursor: pointer; list-style: none; padding: 1rem 1.25rem; font-weight: 700;
+                          font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem; }
+.study-section > summary::-webkit-details-marker { display: none; }
+.study-section > summary::after { content: '+'; margin-left: auto; color: var(--muted); font-weight: 700; }
+.study-section[open] > summary::after { content: '–'; }
+.study-body { padding: 0 1.25rem 1.25rem; }
+.study-body ul { margin: 0.5rem 0 0.5rem 1.25rem; }
+.study-body li { margin-bottom: 0.35rem; line-height: 1.55; }
+.study-body code { background: var(--surface-2); padding: 0.1rem 0.35rem; border-radius: 4px; font-size: 0.9em; }
+.eg { color: var(--accent); font-weight: 600; }
+/* Progress */
+.spark-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+             padding: 0.75rem 0; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+.spark-row:last-child { border-bottom: none; }
+.empty-state { text-align: center; color: var(--muted); padding: 2rem 1rem; }
+@media (max-width: 560px) {
   .timer { font-size: 1.2rem; }
   .option-btn { font-size: 0.95rem; }
   h1 { font-size: 1.5rem; }
+  h2 { font-size: 1.25rem; }
   .module-select-grid { grid-template-columns: 1fr; }
+  .mode-row { flex-direction: column; gap: 0.5rem; }
+  #topnav { padding: 0.5rem 0.75rem; }
+  .nav-brand { font-size: 1rem; }
+  .nav-btn { padding: 0.4rem 0.6rem; font-size: 0.82rem; }
+  .study-section > summary { font-size: 1rem; padding: 0.85rem 1rem; }
+  .study-body { padding: 0 1rem 1rem; }
 }
   </style>
 </head>
 <body>
+  <nav id="topnav">
+    <div class="nav-brand">⚡ Bright Spark</div>
+    <div class="nav-links">
+      <button class="nav-btn" onclick="renderHome();showScreen('screen-home')">Home</button>
+      <button class="nav-btn" onclick="renderStudy();showScreen('screen-study')">Study Guide</button>
+      <button class="nav-btn" onclick="renderProgress();showScreen('screen-progress')">Progress</button>
+      <a class="nav-btn nav-cta" href="interview.html">Interview Prep</a>
+    </div>
+  </nav>
   <div id="screen-home" class="screen"></div>
   <div id="screen-question" class="screen" style="display:none"></div>
   <div id="screen-review" class="screen" style="display:none"></div>
   <div id="screen-results" class="screen" style="display:none"></div>
+  <div id="screen-study" class="screen" style="display:none"></div>
+  <div id="screen-progress" class="screen" style="display:none"></div>
 
 <script>
 // ============================================================
@@ -194,7 +287,10 @@ function genArithmetic(idx, rng) {
     id: `num_${String(idx+1).padStart(2,'0')}`, module: 'numeracy', type: 'mcq',
     prompt: `<p>Calculate: <strong>${a} ${op} ${b}</strong></p>`,
     options, correct: ci,
-    explanation: `<p>${explanation}</p>`, svg: null
+    explanation: `<p><strong>Step 1:</strong> Identify the operation (${op}).</p><p><strong>Step 2:</strong> ${explanation}.</p>`,
+    hint: "Work left to right; mind the operation.",
+    commonMistake: "A common slip is applying the wrong operation, or making a place-value error when carrying or borrowing.",
+    svg: null
   };
 }
 
@@ -216,7 +312,9 @@ function genFraction(idx, rng) {
     id: `num_${String(idx+1).padStart(2,'0')}`, module: 'numeracy', type: 'mcq',
     prompt: `<p>Calculate: <strong>${n1}/${d1} + ${n2}/${d2}</strong></p>`,
     options, correct: ci,
-    explanation: `<p>LCD of ${d1} and ${d2} is ${lcd}. Convert: ${n1}/${d1} = ${n1*(lcd/d1)}/${lcd}, ${n2}/${d2} = ${n2*(lcd/d2)}/${lcd}. Sum = ${resN}/${lcd} = <strong>${ans}</strong></p>`,
+    explanation: `<p><strong>Step 1:</strong> Find the LCD of ${d1} and ${d2}: it is ${lcd}.</p><p><strong>Step 2:</strong> Convert each fraction: ${n1}/${d1} = ${n1*(lcd/d1)}/${lcd}, and ${n2}/${d2} = ${n2*(lcd/d2)}/${lcd}.</p><p><strong>Step 3:</strong> Add the numerators: ${resN}/${lcd}, which simplifies to <strong>${ans}</strong>.</p>`,
+    hint: "Convert to a common denominator (LCD) before adding.",
+    commonMistake: "A common mistake is adding numerators and denominators directly (e.g. a/b + c/d = (a+c)/(b+d)) — that is not how fractions add.",
     svg: null
   };
 }
@@ -241,7 +339,9 @@ function genDecimal(idx, rng) {
     id: `num_${String(idx+1).padStart(2,'0')}`, module: 'numeracy', type: 'mcq',
     prompt: `<p>Calculate: <strong>${a} ${op} ${factor}</strong></p>`,
     options, correct: ci,
-    explanation: `<p>Moving the decimal point ${Math.log10(factor)} place(s) to the ${isMultiply ? 'right' : 'left'}: ${a} ${op} ${factor} = <strong>${correct}</strong></p>`,
+    explanation: `<p><strong>Step 1:</strong> ${factor} is 10 to the power ${Math.log10(factor)}, so move the decimal point ${Math.log10(factor)} place(s).</p><p><strong>Step 2:</strong> Because you are ${isMultiply ? 'multiplying' : 'dividing'}, move it to the ${isMultiply ? 'right' : 'left'}: ${a} ${op} ${factor} = <strong>${correct}</strong>.</p>`,
+    hint: "Count how many places to move the decimal point.",
+    commonMistake: "A common slip is moving the decimal the wrong direction, or by the wrong number of places (e.g. one place for ×100 instead of two).",
     svg: null
   };
 }
@@ -280,7 +380,10 @@ function genPercentage(idx, rng) {
   const { options, correct: ci } = makeDistractors(correct, errFns, String);
   return {
     id: `num_${String(idx+1).padStart(2,'0')}`, module: 'numeracy', type: 'mcq',
-    prompt, options, correct: ci, explanation, svg: null
+    prompt, options, correct: ci, explanation,
+    hint: "Per cent means 'out of 100' — divide by 100 first.",
+    commonMistake: "A common slip is multiplying by the per cent instead of dividing by 100 first (e.g. treating 20% as ×20 rather than ×0.2).",
+    svg: null
   };
 }
 
@@ -299,7 +402,9 @@ function genRatio(idx, rng) {
     id: `num_${String(idx+1).padStart(2,'0')}`, module: 'numeracy', type: 'mcq',
     prompt: `<p>A and B share in the ratio <strong>${a}:${b}</strong>. The total is <strong>${T}</strong>. How much does A receive?</p>`,
     options, correct: ci,
-    explanation: `<p>Total parts = ${a} + ${b} = ${a+b}. Each part = ${T} ÷ ${a+b} = ${k}. A's share = ${a} × ${k} = <strong>${aShare}</strong></p>`,
+    explanation: `<p><strong>Step 1:</strong> Add the ratio parts: ${a} + ${b} = ${a+b}.</p><p><strong>Step 2:</strong> Find one part: ${T} ÷ ${a+b} = ${k}.</p><p><strong>Step 3:</strong> A's share = ${a} × ${k} = <strong>${aShare}</strong>.</p>`,
+    hint: "Add the ratio parts to find the value of one part.",
+    commonMistake: "Dividing the total by one side's number ignores the other parts — you must divide by the SUM of the parts first.",
     svg: null
   };
 }
@@ -328,7 +433,9 @@ function genUnitConversion(idx, rng) {
     id: `num_${String(idx+1).padStart(2,'0')}`, module: 'numeracy', type: 'mcq',
     prompt: `<p>Convert <strong>${val} ${conv.from}</strong> to <strong>${conv.to}</strong>.</p>`,
     options, correct: ci,
-    explanation: `<p>${val} ${conv.from} × ${conv.factor} = <strong>${correct} ${conv.to}</strong></p>`,
+    explanation: `<p><strong>Step 1:</strong> Going from ${conv.from} to ${conv.to} means you ${conv.dir === 'multiply' ? 'multiply' : 'divide'} by ${conv.factor}.</p><p><strong>Step 2:</strong> ${val} ${conv.dir === 'multiply' ? '×' : '÷'} ${conv.factor} = <strong>${correct} ${conv.to}</strong>.</p>`,
+    hint: "Decide whether you multiply or divide, then by what factor.",
+    commonMistake: "A common error is multiplying when you should divide (or vice-versa) — check whether you are moving to a larger or smaller unit.",
     svg: null
   };
 }
@@ -355,7 +462,10 @@ function genRate(idx, rng) {
   const { options, correct: ci } = makeDistractors(correct, errFns, v => isSpeed ? String(v) : `$${v}`);
   return {
     id: `num_${String(idx+1).padStart(2,'0')}`, module: 'numeracy', type: 'mcq',
-    prompt, options, correct: ci, explanation, svg: null
+    prompt, options, correct: ci, explanation,
+    hint: "Rate = amount ÷ time. Rearrange for what's asked.",
+    commonMistake: "A common slip is multiplying when you should divide (or vice-versa) — write the rate formula down and rearrange before plugging in numbers.",
+    svg: null
   };
 }
 
@@ -394,7 +504,10 @@ function genAverage(idx, rng) {
   const { options, correct: ci } = makeDistractors(correct, errFns, String);
   return {
     id: `num_${String(idx+1).padStart(2,'0')}`, module: 'numeracy', type: 'mcq',
-    prompt, options, correct: ci, explanation, svg: null
+    prompt, options, correct: ci, explanation,
+    hint: "Average = sum ÷ count. For a missing value, work back from the total.",
+    commonMistake: "A common error is dividing by the wrong count, or forgetting that the total equals average × number of items.",
+    svg: null
   };
 }
 
@@ -427,7 +540,10 @@ function genTableQuestion(idx, rng) {
       [() => otherMats[0], () => otherMats[1], () => otherMats[2] || otherMats[0]], v => v);
     return {
       id: `num_${String(idx+1).padStart(2,'0')}`, module: 'numeracy', type: 'mcq',
-      prompt, options, correct: ci, explanation, svg: null
+      prompt, options, correct: ci, explanation,
+      hint: "Read the exact row/column the question asks for.",
+      commonMistake: "A common error is reading the wrong row or column, or comparing the wrong totals.",
+      svg: null
     };
   } else {
     const ri1 = 0, ri2 = 1;
@@ -440,7 +556,10 @@ function genTableQuestion(idx, rng) {
   const { options, correct: ci2 } = makeDistractors(correct, errFns, String);
   return {
     id: `num_${String(idx+1).padStart(2,'0')}`, module: 'numeracy', type: 'mcq',
-    prompt, options, correct: ci2, explanation, svg: null
+    prompt, options, correct: ci2, explanation,
+    hint: "Read the exact row/column the question asks for.",
+    commonMistake: "A common error is reading the wrong row or column, or adding instead of finding the difference.",
+    svg: null
   };
 }
 
@@ -469,7 +588,10 @@ function genBarChartQuestion(idx, rng) {
     const { options, correct: ci } = makeDistractors(correct, [() => others[0], () => others[1], () => others[2]], v => v);
     return {
       id: `num_${String(idx+1).padStart(2,'0')}`, module: 'numeracy', type: 'mcq',
-      prompt, options, correct: ci, explanation, svg: null
+      prompt, options, correct: ci, explanation,
+      hint: "Read each bar's value off the axis before combining.",
+      commonMistake: "A common error is misreading a bar's height against the axis, or picking the tallest by eye without checking the values.",
+      svg: null
     };
   } else if (subtype === 1) {
     correct = values.reduce((a,b) => a+b, 0);
@@ -486,7 +608,10 @@ function genBarChartQuestion(idx, rng) {
   const { options, correct: ci2 } = makeDistractors(correct, errFns, String);
   return {
     id: `num_${String(idx+1).padStart(2,'0')}`, module: 'numeracy', type: 'mcq',
-    prompt, options, correct: ci2, explanation, svg: null
+    prompt, options, correct: ci2, explanation,
+    hint: "Read each bar's value off the axis before combining.",
+    commonMistake: "A common error is misreading a bar against the axis, or adding values when the question asks for a difference.",
+    svg: null
   };
 }
 
@@ -538,7 +663,7 @@ const SHAPES = {
 };
 
 const SHAPE_KEYS = Object.keys(SHAPES);
-const FILLS = ['none','#222','#888','#ddd','white'];
+const FILLS = ['none','#1f2937','#9ca3af','#60a5fa','#fbbf24'];
 
 function renderFrame(spec) {
   const { shape, fill, rotation, scale, count } = spec;
@@ -575,6 +700,33 @@ function renderFrameSmall(spec) {
 let _absRng = lcg(42);
 function resetAbsRng(seed) { _absRng = lcg(seed); }
 
+// Guarantees the four answer options render to visually-distinct SVGs.
+// specs[0] is always the correct option; only distractors (index >= 1) are
+// perturbed. Because the duplicate check compares against ALL other options
+// (including the correct one), the correct answer can never end up duplicated
+// among the distractors.
+function dedupeOptionSpecs(specs, renderFn) {
+  for (let i = 1; i < specs.length; i++) {
+    let guard = 0;
+    while (guard < 60) {
+      const rendered = specs.map(renderFn);
+      const isDup = rendered.some((r, k) => k !== i && r === rendered[i]);
+      if (!isDup) break;
+      const s = specs[i];
+      if (guard < FILLS.length) {
+        s.fill = FILLS[(FILLS.indexOf(s.fill) + 1) % FILLS.length];
+      } else if (guard < FILLS.length + SHAPE_KEYS.length) {
+        s.shape = SHAPE_KEYS[(SHAPE_KEYS.indexOf(s.shape) + 1) % SHAPE_KEYS.length];
+      } else {
+        s.rotation = ((s.rotation || 0) + 30) % 360;
+        s.count = ((s.count || 1) % 3) + 1;
+      }
+      guard++;
+    }
+  }
+  return specs;
+}
+
 function genSequenceQuestion(idxStr) {
   const shape = SHAPE_KEYS[Math.floor(_absRng() * SHAPE_KEYS.length)];
   const fillSeq = FILLS.slice();
@@ -598,7 +750,7 @@ function genSequenceQuestion(idxStr) {
     { ...correctSpec, rotation: (correctSpec.rotation + 90) % 360 },
     { ...correctSpec, count: Math.max(1, (correctSpec.count || 1) - 1), fill: fillSeq[(startFillIdx + 2) % FILLS.length] }
   ];
-  const allOpts = [correctSpec, ...distSpecs];
+  const allOpts = dedupeOptionSpecs([correctSpec, ...distSpecs], renderFrameSmall);
   // shuffle
   let ci = 0;
   for (let i = allOpts.length - 1; i > 0; i--) {
@@ -616,7 +768,9 @@ function genSequenceQuestion(idxStr) {
     prompt: `<p>What comes next in the sequence?</p><div class="seq-display">${seqHtml}</div>`,
     options: allOpts.map(s => renderFrameSmall(s)),
     correct: ci,
-    explanation: `<p>The sequence follows: shape="${shape}", fill cycles through ${FILLS.join('→')}, rotation increases by ${rotStep}° each step${useCount ? ', count increases by 1' : ''}. The correct answer applies all rules to step 4.</p>`,
+    explanation: `<p>The sequence follows: shape="${shape}", fill cycles through ${FILLS.join('→')}, rotation increases by ${rotStep}° each step${useCount ? ', count increases by 1' : ''}. The correct answer applies all of these rules to step 4.</p>`,
+    hint: "Track each property separately: shape, fill, rotation, count.",
+    commonMistake: "A common trap is matching only one property (e.g. the right shape) while ignoring rotation, fill or count.",
     svg: null, isAbstract: true
   };
 }
@@ -639,7 +793,7 @@ function genMatrixQuestion(idxStr) {
     { ...correctSpec, rotation: (correctSpec.rotation + 45) % 360 },
     { ...correctSpec, fill: fills[0], rotation: colRots[0] }
   ];
-  const allOpts = [correctSpec, ...distSpecs];
+  const allOpts = dedupeOptionSpecs([correctSpec, ...distSpecs], renderFrameSmall);
   let ci = 0;
   for (let i = allOpts.length - 1; i > 0; i--) {
     const j = Math.floor(_absRng() * (i + 1));
@@ -656,13 +810,16 @@ function genMatrixQuestion(idxStr) {
     options: allOpts.map(s => renderFrameSmall(s)),
     correct: ci,
     explanation: `<p>Each row rotates by ${rowRots[1]}°; each column rotates by ${colRots[1]}°. The missing cell requires rotation=${correctSpec.rotation}° and fill="${correctSpec.fill}".</p>`,
+    hint: "Find the rule across the row AND down the column.",
+    commonMistake: "A common trap is following only the row pattern (or only the column) instead of combining both transformations.",
     svg: null, isAbstract: true
   };
 }
 
 function genOddOneOutQuestion(idxStr) {
   const shape = SHAPE_KEYS[Math.floor(_absRng() * SHAPE_KEYS.length)];
-  const oddShape = SHAPE_KEYS[Math.floor(_absRng() * SHAPE_KEYS.length)] || SHAPE_KEYS[1];
+  let oddShape = SHAPE_KEYS[Math.floor(_absRng() * SHAPE_KEYS.length)];
+  while (oddShape === shape) oddShape = SHAPE_KEYS[Math.floor(_absRng() * SHAPE_KEYS.length)];
   const fill = FILLS[Math.floor(_absRng() * FILLS.length)];
   const oddIdx = Math.floor(_absRng() * 5);
   const specs = Array.from({length:5}, (_,i) => ({
@@ -681,6 +838,8 @@ function genOddOneOutQuestion(idxStr) {
     options: labels,
     correct: oddIdx,
     explanation: `<p>Options ${labels.filter((_,i)=>i!==oddIdx).join(', ')} all show a <em>${shape}</em>. Option <strong>${labels[oddIdx]}</strong> shows a <em>${oddShape}</em> — making it the odd one out.</p>`,
+    hint: "Find the property four of them share.",
+    commonMistake: "A common trap is picking the figure that looks unusual at a glance rather than the one that breaks the shared rule.",
     svg: null, isAbstract: false
   };
 }
@@ -927,6 +1086,42 @@ const MECHANICAL_QUESTIONS = [
   }
 ];
 
+// ---- 1G. Hints & common-mistake annotations for hand-authored banks ----
+// Attached here (keyed by id) to keep the question objects above readable.
+const SAFETY_ANNOTATIONS = {
+  safe_01: { hint:"What protects people first, regardless of schedule?", commonMistake:"Trusting someone else's word instead of applying your own lock and testing for dead — isolation must be personally verified." },
+  safe_02: { hint:"What protects people first, regardless of schedule?", commonMistake:"Judging a shock-loaded harness by appearance — internal fall damage is invisible, so it must come out of service." },
+  safe_03: { hint:"What protects people first, regardless of schedule?", commonMistake:"Assuming the plan is complete — unmarked or unregistered cables exist, so any strike is treated as live." },
+  safe_04: { hint:"What protects people first, regardless of schedule?", commonMistake:"Treating confusion and slurred speech as ordinary tiredness rather than signs of a medical emergency." },
+  safe_05: { hint:"What protects people first, regardless of schedule?", commonMistake:"Believing a supervisor's instruction transfers your personal liability for plant you have not inspected." },
+  safe_06: { hint:"What protects people first, regardless of schedule?", commonMistake:"Thinking a near-miss needs no report because no one was hurt — it is exactly the warning that prevents the next incident." },
+  safe_07: { hint:"What protects people first, regardless of schedule?", commonMistake:"Treating PPE as optional for a 'quick' task — a fatal shock takes far less than two minutes." },
+  safe_08: { hint:"What protects people first, regardless of schedule?", commonMistake:"Following an informal shortcut over the risk-assessed documented procedure." },
+  safe_09: { hint:"What protects people first, regardless of schedule?", commonMistake:"Believing a cracked disc is safe for 'just a short task' — it can shatter at speed." },
+  safe_10: { hint:"What protects people first, regardless of schedule?", commonMistake:"Delaying or softening the response (a quiet word, watching them) when immediate supervisor notification is required." },
+  safe_11: { hint:"What protects people first, regardless of schedule?", commonMistake:"Continuing live work while distracted instead of pausing and stepping back first." },
+  safe_12: { hint:"What protects people first, regardless of schedule?", commonMistake:"Letting schedule pressure override LOTO — re-energising while others may be working is a leading cause of fatalities." },
+  safe_13: { hint:"What protects people first, regardless of schedule?", commonMistake:"Ignoring a hazard because the equipment 'belongs to someone else' — you have a duty to act." },
+  safe_14: { hint:"What protects people first, regardless of schedule?", commonMistake:"Finishing the task before checking in — the control room may already be escalating an emergency response." },
+  safe_15: { hint:"What protects people first, regardless of schedule?", commonMistake:"Relying on a label or a colleague's word instead of the current SDS for an unfamiliar chemical." }
+};
+const MECH_ANNOTATIONS = {
+  mech_01: { hint:"Smaller gear spins faster — speed is inverse to teeth.", commonMistake:"Multiplying by the tooth ratio the wrong way up — the bigger gear must turn slower, not faster." },
+  mech_02: { hint:"Meshed gears turn in opposite directions.", commonMistake:"Assuming meshed gears turn the same way — only an idler or belt between them keeps the direction." },
+  mech_03: { hint:"Smaller gear spins faster — speed is inverse to teeth.", commonMistake:"Inverting the gear ratio and getting a speed increase instead of the intended reduction." },
+  mech_04: { hint:"A single fixed pulley changes direction only.", commonMistake:"Expecting a fixed pulley to reduce the force — it only redirects it, so effort equals the load." },
+  mech_05: { hint:"Each moving pulley supported by two rope sections halves the effort.", commonMistake:"Forgetting the moveable pulley gives a mechanical advantage of 2, so the effort is half the load." },
+  mech_06: { hint:"Balance: load × distance = effort × distance.", commonMistake:"Adding masses or distances instead of balancing the two moments (load×dist = effort×dist)." },
+  mech_07: { hint:"Identify what sits between the fulcrum and the effort.", commonMistake:"Confusing the lever class — in a wheelbarrow the load is between the fulcrum (wheel) and effort (handles)." },
+  mech_08: { hint:"On a ramp, force = weight × height ÷ length.", commonMistake:"Using the full weight as the push force and ignoring the ramp's mechanical advantage (height/length)." },
+  mech_09: { hint:"Series = one path; a single break stops everything.", commonMistake:"Assuming bulbs are independent — in series, one break stops them all." },
+  mech_10: { hint:"Parallel = independent paths.", commonMistake:"Assuming a removed bulb affects the others — in parallel each branch is independent." },
+  mech_11: { hint:"Both switches required to close = series = AND.", commonMistake:"Picking only 'series' or only 'AND' when the circuit is both: series wiring behaves like an AND gate." },
+  mech_12: { hint:"Hooke's law: extension is proportional to force.", commonMistake:"Adding a fixed amount instead of scaling extension in proportion to the force (extension ∝ force)." }
+};
+SAFETY_QUESTIONS.forEach(q => { const a = SAFETY_ANNOTATIONS[q.id]; if (a) { q.hint = a.hint; q.commonMistake = a.commonMistake; } });
+MECHANICAL_QUESTIONS.forEach(q => { const a = MECH_ANNOTATIONS[q.id]; if (a) { q.hint = a.hint; q.commonMistake = a.commonMistake; } });
+
 // ============================================================
 // SECTION 2: TIMING
 // ============================================================
@@ -977,7 +1172,17 @@ const state = {
   timerSecondsLeft: 0
 };
 
+let _hintShown = {};
+let _sessionSaved = false;
+
+function toggleHint(qId) {
+  _hintShown[qId] = !_hintShown[qId];
+  renderQuestionScreen();
+}
+
 function initSession(modules, mode) {
+  _hintShown = {};
+  _sessionSaved = false;
   state.mode = mode;
   state.sessionModules = modules;
   state.answers = {};
@@ -1024,6 +1229,7 @@ function advanceModule() {
     startModule(state.sessionModules[state.currentModuleIdx]);
   } else {
     stopTimer();
+    saveSessionResult();
     renderResults();
     showScreen('screen-results');
   }
@@ -1107,9 +1313,16 @@ function renderReviewJumpQuestion() {
 // SECTION 3: UI
 // ============================================================
 
+function setNav(visible) {
+  const nav = document.getElementById('topnav');
+  if (nav) nav.style.display = visible ? 'flex' : 'none';
+}
+
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
   document.getElementById(id).style.display = 'block';
+  // Nav is hidden during an active question/review session; shown elsewhere.
+  setNav(!(id === 'screen-question' || id === 'screen-review'));
 }
 
 function updateTimerDisplay(secs) {
@@ -1166,6 +1379,7 @@ function renderHome() {
         <button class="btn btn-primary" onclick="startFromHome()">Start Selected</button>
         <button class="btn btn-ghost" onclick="startFullExam()">Full Exam (all 4)</button>
       </div>
+      <div id="home-error" class="inline-error" style="display:none"></div>
     </div>
   </div>`;
   // track selected modules
@@ -1208,7 +1422,12 @@ function setMode(m) {
 
 function startFromHome() {
   const modules = ['numeracy','abstract','safety','mechanical'].filter(k => window._selectedModules.includes(k));
-  if (modules.length === 0) { alert('Please select at least one module.'); return; }
+  const errEl = document.getElementById('home-error');
+  if (modules.length === 0) {
+    if (errEl) { errEl.textContent = 'Please select at least one module.'; errEl.style.display = 'block'; }
+    return;
+  }
+  if (errEl) errEl.style.display = 'none';
   initSession(modules, state.mode);
 }
 
@@ -1228,34 +1447,35 @@ function renderQuestionScreen(fromReviewJump) {
   const moduleNames = { numeracy: 'Numeracy', abstract: 'Abstract Reasoning', safety: 'Safety Awareness', mechanical: 'Mechanical Reasoning' };
   const isReviewJump = state.reviewMode;
 
+  const LETTERS = ['A','B','C','D','E'];
   let optionsHtml = '';
   if (q.isAbstract && Array.isArray(q.options) && q.options[0] && q.options[0].includes('<svg')) {
     optionsHtml = `<div class="abs-options-grid">`;
     q.options.forEach((opt, i) => {
       let cls = 'abs-option-btn';
+      let icon = '';
       if (hasAnswer) {
-        if (i === answered && i === q.correct) cls += ' correct';
-        else if (i === answered && i !== q.correct) cls += ' incorrect';
-        else if (i === q.correct && (isReviewJump || state.mode === 'practice')) cls += ' correct';
+        if (i === answered && i === q.correct) { cls += ' correct'; icon = ' ✓'; }
+        else if (i === answered && i !== q.correct) { cls += ' incorrect'; icon = ' ✗'; }
+        else if (i === q.correct && (isReviewJump || state.mode === 'practice')) { cls += ' correct'; icon = ' ✓'; }
         else if (i === answered) cls += ' selected';
       }
       const disabled = (state.mode === 'practice' && hasAnswer) || isReviewJump ? 'disabled' : '';
-      optionsHtml += `<button class="${cls}" ${disabled} onclick="selectAnswer('${q.id}', ${i})">${opt}</button>`;
+      optionsHtml += `<button class="${cls}" ${disabled} onclick="selectAnswer('${q.id}', ${i})">${opt}<span class="abs-badge">${LETTERS[i]}${icon}</span></button>`;
     });
     optionsHtml += `</div>`;
   } else {
     q.options.forEach((opt, i) => {
       let cls = 'option-btn';
+      let icon = '';
       if (hasAnswer || isReviewJump) {
-        if (i === answered && i === q.correct) cls += ' correct';
-        else if (i === answered && i !== q.correct) cls += ' incorrect';
-        else if (i === q.correct && (isReviewJump || state.mode === 'practice')) cls += ' correct';
+        if (i === answered && i === q.correct) { cls += ' correct'; icon = '✓'; }
+        else if (i === answered && i !== q.correct) { cls += ' incorrect'; icon = '✗'; }
+        else if (i === q.correct && (isReviewJump || state.mode === 'practice')) { cls += ' correct'; icon = '✓'; }
         else if (i === answered) cls += ' selected';
-      } else if (!hasAnswer && !isReviewJump) {
-        // no answer yet, no extra class
       }
       const disabled = (state.mode === 'practice' && hasAnswer) || isReviewJump ? 'disabled' : '';
-      optionsHtml += `<button class="${cls}" ${disabled} onclick="selectAnswer('${q.id}', ${i})">${opt}</button>`;
+      optionsHtml += `<button class="${cls}" ${disabled} onclick="selectAnswer('${q.id}', ${i})"><span class="opt-badge">${LETTERS[i]}</span><span class="opt-text">${opt}</span>${icon ? `<span class="opt-icon">${icon}</span>` : ''}</button>`;
     });
   }
 
@@ -1263,13 +1483,25 @@ function renderQuestionScreen(fromReviewJump) {
   if ((state.mode === 'practice' && hasAnswer) || isReviewJump) {
     const isCorrect = answered === q.correct;
     const feedClass = (answered === undefined) ? '' : (isCorrect ? '' : ' wrong');
+    const mistakeHtml = q.commonMistake ? `<div class="mistake-line">⚠️ Common mistake: ${q.commonMistake}</div>` : '';
     if (answered !== undefined) {
       feedbackHtml = `<div class="feedback-box${feedClass}">
         <strong>${isCorrect ? '✓ Correct' : '✗ Incorrect'}</strong>
         ${q.explanation}
+        ${mistakeHtml}
       </div>`;
     } else if (isReviewJump) {
-      feedbackHtml = `<div class="feedback-box wrong"><strong>Not answered</strong>${q.explanation}</div>`;
+      feedbackHtml = `<div class="feedback-box wrong"><strong>Not answered</strong>${q.explanation}${mistakeHtml}</div>`;
+    }
+  }
+
+  // Hint (practice only, before answering)
+  let hintHtml = '';
+  if (state.mode === 'practice' && !hasAnswer && !isReviewJump && q.hint) {
+    if (_hintShown[q.id]) {
+      hintHtml = `<div class="hint-box">💡 ${q.hint}</div>`;
+    } else {
+      hintHtml = `<button class="hint-btn" onclick="toggleHint('${q.id}')">💡 Show hint</button>`;
     }
   }
 
@@ -1284,17 +1516,19 @@ function renderQuestionScreen(fromReviewJump) {
         <div class="q-counter">Question ${idx+1} / ${total}</div>
       </div>
       <div style="text-align:right">
-        ${showTimer ? `<div id="timer-display" class="timer${tUrgent?' urgent':''}">${tDisplay}</div>` : ''}
+        ${showTimer ? `<div id="timer-display" class="timer${tUrgent?' urgent':''}" aria-live="polite">${tDisplay}</div>` : ''}
         ${isReviewJump ? '<span style="font-size:0.85rem;color:var(--muted)">Review Mode</span>' : ''}
       </div>
     </div>
     <div class="container" style="padding:1rem">
       <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+      <div class="progress-label">${pct}% complete</div>
       <div style="margin:1rem 0">
         <div>${q.svg ? q.svg : ''}</div>
         <div>${q.prompt}</div>
       </div>
       ${optionsHtml}
+      ${hintHtml}
       ${feedbackHtml}
       <div class="nav-row">
         <button class="btn btn-ghost" onclick="goPrev()" ${idx===0?'disabled':''}>&#8592; Prev</button>
@@ -1411,6 +1645,7 @@ function renderResults() {
         <div style="font-size:0.9rem;margin-bottom:0.5rem"><span style="color:var(--muted)">Correct answer:</span> ${corrAnsDisplay}</div>
         <hr>
         ${q.explanation}
+        ${q.commonMistake ? `<div class="mistake-line">⚠️ Common mistake: ${q.commonMistake}</div>` : ''}
       </div>`;
     });
   });
@@ -1436,6 +1671,231 @@ function renderResults() {
         <button class="btn btn-primary" onclick="renderHome();showScreen('screen-home')">Try Again</button>
       </div>
     </div>`;
+}
+
+// ============================================================
+// SECTION 5: PROGRESS TRACKING (localStorage)
+// ============================================================
+
+const PROGRESS_KEY = 'brightspark_progress';
+
+function loadProgress() {
+  try {
+    const raw = localStorage.getItem(PROGRESS_KEY);
+    if (!raw) return [];
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr : [];
+  } catch (e) { return []; }
+}
+
+function saveSessionResult() {
+  if (_sessionSaved) return;
+  _sessionSaved = true;
+  const perModule = {};
+  state.sessionModules.forEach(key => { perModule[key] = scoreModule(key); });
+  const overall = scoreSession();
+  const entry = {
+    date: new Date().toISOString(),
+    mode: state.mode,
+    perModule,
+    overall: { correct: overall.totalCorrect, total: overall.totalQuestions, pct: overall.pct, band: overall.band }
+  };
+  let arr = loadProgress();
+  arr.push(entry);
+  if (arr.length > 50) arr = arr.slice(arr.length - 50);
+  try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(arr)); } catch (e) {}
+}
+
+function clearProgress() {
+  try { localStorage.removeItem(PROGRESS_KEY); } catch (e) {}
+}
+
+function sparkline(values) {
+  if (!values || values.length === 0) return '<span style="color:var(--muted)">—</span>';
+  const w = 120, h = 28, pad = 2;
+  if (values.length === 1) {
+    const y = h - pad - (values[0] / 100) * (h - 2 * pad);
+    return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><circle cx="${w/2}" cy="${y}" r="3" fill="#1d4ed8"/></svg>`;
+  }
+  const step = (w - 2 * pad) / (values.length - 1);
+  const pts = values.map((v, i) => {
+    const x = pad + i * step;
+    const y = h - pad - (Math.max(0, Math.min(100, v)) / 100) * (h - 2 * pad);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(' ');
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><polyline points="${pts}" fill="none" stroke="#1d4ed8" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
+}
+
+function renderProgress() {
+  const moduleNames = { numeracy: 'Numeracy', abstract: 'Abstract Reasoning', safety: 'Safety Awareness', mechanical: 'Mechanical Reasoning' };
+  const history = loadProgress();
+  const el = document.getElementById('screen-progress');
+
+  if (history.length === 0) {
+    el.innerHTML = `<div class="container" style="padding:2rem 1rem">
+      <h1>Progress</h1>
+      <div class="home-card empty-state">
+        <p style="font-size:1.1rem;font-weight:600;color:var(--ink)">No history yet</p>
+        <p>Complete a practice or exam session and your scores will be tracked here — best %, average %, and trends over time.</p>
+        <button class="btn btn-primary" style="margin-top:0.5rem" onclick="renderHome();showScreen('screen-home')">Start a session</button>
+      </div>
+    </div>`;
+    return;
+  }
+
+  // Per-module aggregates
+  const moduleKeys = ['numeracy','abstract','safety','mechanical'];
+  let moduleRows = '';
+  moduleKeys.forEach(key => {
+    const pcts = history.filter(h => h.perModule && h.perModule[key]).map(h => h.perModule[key].pct);
+    if (pcts.length === 0) return;
+    const best = Math.max(...pcts);
+    const avg = Math.round(pcts.reduce((a,b)=>a+b,0) / pcts.length);
+    moduleRows += `<div class="spark-row">
+      <div style="min-width:160px"><strong>${moduleNames[key]}</strong><div style="font-size:0.8rem;color:var(--muted)">${pcts.length} session${pcts.length===1?'':'s'}</div></div>
+      <div style="font-size:0.9rem">Best <strong>${best}%</strong> · Avg <strong>${avg}%</strong></div>
+      <div title="Score trend">${sparkline(pcts)}</div>
+    </div>`;
+  });
+
+  // Recent sessions (newest first)
+  const recent = history.slice().reverse().slice(0, 15);
+  let sessionRows = recent.map(h => {
+    const d = new Date(h.date);
+    const dateStr = isNaN(d) ? h.date : d.toLocaleString();
+    const o = h.overall || { correct: 0, total: 0, pct: 0 };
+    const bc = o.pct >= 80 ? 'band-strong' : o.pct >= 65 ? 'band-solid' : 'band-low';
+    return `<tr><td>${dateStr}</td><td style="text-transform:capitalize">${h.mode || ''}</td><td>${o.correct}/${o.total}</td><td class="${bc}">${o.pct}%</td></tr>`;
+  }).join('');
+
+  el.innerHTML = `<div class="container" style="padding:2rem 1rem">
+    <h1>Progress</h1>
+    <p style="color:var(--muted);margin-bottom:1.5rem">Saved locally on this device (${history.length} session${history.length===1?'':'s'}).</p>
+    <div class="home-card">
+      <h3>Per-module performance</h3>
+      ${moduleRows || '<p style="color:var(--muted)">No module data yet.</p>'}
+    </div>
+    <div class="home-card">
+      <h3>Recent sessions</h3>
+      <table><tr><th>Date</th><th>Mode</th><th>Score</th><th>%</th></tr>${sessionRows}</table>
+    </div>
+    <div style="margin-top:1rem">
+      <button class="btn btn-danger" onclick="if(confirm('Clear all saved history?')){clearProgress();renderProgress();}">Clear history</button>
+    </div>
+  </div>`;
+}
+
+// ============================================================
+// SECTION 6: STUDY / REFERENCE GUIDE
+// ============================================================
+
+const STUDY_CONTENT = [
+  {
+    title: 'Numeracy methods', icon: '🔢',
+    html: `
+    <p><strong>Percentages.</strong> "Per cent" means out of 100 — divide by 100 first.</p>
+    <ul>
+      <li>X% of Y = (X ÷ 100) × Y. <span class="eg">e.g. 20% of 60 = 0.2 × 60 = 12.</span></li>
+      <li>% change = (new − old) ÷ old × 100. <span class="eg">e.g. 40→50: 10 ÷ 40 × 100 = 25%.</span></li>
+      <li>Reverse %: if 80 is 20% off the original, original = 80 ÷ 0.8 = 100.</li>
+    </ul>
+    <p><strong>Ratios &amp; proportion.</strong> Sum the parts → find one part → share out.</p>
+    <ul><li>Split 60 in 2:3 → 5 parts, one part = 60 ÷ 5 = 12, shares = 24 and 36.</li></ul>
+    <p><strong>Fractions.</strong></p>
+    <ul>
+      <li>Add/subtract: use a common denominator. <span class="eg">e.g. 1/2 + 1/3 = 3/6 + 2/6 = 5/6.</span></li>
+      <li>Multiply: multiply across. <span class="eg">e.g. 2/3 × 3/4 = 6/12 = 1/2.</span></li>
+      <li>Divide: flip the second and multiply.</li>
+    </ul>
+    <p><strong>Decimals &amp; place value.</strong> ×/÷ by powers of 10 moves the decimal point.</p>
+    <ul><li>×10 moves one place right, ÷100 moves two places left. <span class="eg">e.g. 3.4 × 100 = 340.</span></li></ul>
+    <p><strong>Rates.</strong> Rate = amount ÷ time ($/hr, m/min). Rearrange: time = amount ÷ rate.</p>
+    <ul><li><span class="eg">e.g. 150 m at 50 m/hr → 150 ÷ 50 = 3 hr.</span></li></ul>
+    <p><strong>Averages (mean).</strong> Mean = sum ÷ count. Total = mean × count.</p>
+    <ul><li>Missing value: total − known. <span class="eg">e.g. avg of 5 is 20 → total 100; if four sum to 78, fifth = 22.</span></li></ul>
+    <p><strong>Unit conversions.</strong></p>
+    <ul>
+      <li>km↔m ×1000, kg↔g ×1000, L↔mL ×1000.</li>
+      <li>hr↔min ×60, cm↔mm ×10. Larger unit → smaller unit means multiply.</li>
+      <li><span class="eg">e.g. 3 km = 3000 m; 90 min = 1.5 hr.</span></li>
+    </ul>
+    <p><strong>Tables &amp; bar charts.</strong> Read the exact row/column or bar value off the axis <em>before</em> combining. Watch for "total" vs "difference" wording.</p>`
+  },
+  {
+    title: 'Abstract reasoning strategy', icon: '🧩',
+    html: `
+    <p>Figures change by a small set of rules. Check <strong>one property at a time</strong> and predict the answer before looking at the options.</p>
+    <p><strong>Common rule types:</strong></p>
+    <ul>
+      <li><strong>Rotation</strong> — shape turns by a fixed angle each step.</li>
+      <li><strong>Count change</strong> — number of elements increases/decreases.</li>
+      <li><strong>Fill / shade</strong> — colour cycles (none → grey → black …).</li>
+      <li><strong>Size</strong> — grows or shrinks step by step.</li>
+      <li><strong>Position shift</strong> — element moves around the frame.</li>
+      <li><strong>Shape swap</strong> — one shape replaces another in sequence.</li>
+    </ul>
+    <p><strong>Sequences:</strong> work out each property's rule across steps 1→3, then apply all rules to find step 4.</p>
+    <p><strong>Matrices:</strong> find the rule <em>across the row AND down the column</em>; the missing cell satisfies both.</p>
+    <p><strong>Odd-one-out:</strong> find the property four/most figures share — the one that breaks it is the answer (not just the one that looks odd).</p>`
+  },
+  {
+    title: 'Mechanical principles', icon: '⚙️',
+    html: `
+    <p><strong>Gears.</strong> Meshed gears turn in <em>opposite</em> directions. Speed is inverse to teeth.</p>
+    <ul><li>Speed ratio = driver teeth ÷ driven teeth. <span class="eg">e.g. 8T driving 24T at 90 RPM → 90 × 8/24 = 30 RPM.</span></li><li>An idler gear between two gears reverses direction but does not change the overall ratio.</li></ul>
+    <p><strong>Pulleys &amp; mechanical advantage (MA).</strong></p>
+    <ul>
+      <li>A single <em>fixed</em> pulley changes direction only — MA = 1, effort = load.</li>
+      <li>Each <em>moving</em> pulley adds mechanical advantage (rope sections supporting the load). <span class="eg">One moving pulley → MA 2, effort = load ÷ 2.</span></li>
+    </ul>
+    <p><strong>Levers &amp; moments.</strong> Balance: load × distance = effort × distance.</p>
+    <ul><li><span class="eg">e.g. 60 kg at 1 m balances 30 kg at 2 m.</span></li><li>Classes: 1st = fulcrum in the middle; 2nd = load in the middle (wheelbarrow); 3rd = effort in the middle (tweezers).</li></ul>
+    <p><strong>Inclined plane.</strong> Force = weight × (height ÷ length). A longer ramp needs less force.</p>
+    <ul><li><span class="eg">e.g. 1000 N up a 5 m ramp rising 1 m → 1000 × 1/5 = 200 N.</span></li></ul>
+    <p><strong>Circuits.</strong></p>
+    <ul>
+      <li><strong>Series</strong> = one path; one break stops everything.</li>
+      <li><strong>Parallel</strong> = independent paths; one break affects only its branch.</li>
+      <li><strong>Switch logic:</strong> two switches in series = AND (both must be closed). Two in parallel = OR.</li>
+    </ul>
+    <p><strong>Hooke's law.</strong> Extension is proportional to force: F = k·x.</p>
+    <ul><li><span class="eg">e.g. 20 N stretches 4 cm → k = 5 N/cm → 35 N stretches 7 cm.</span></li></ul>
+    <p><strong>Ohm's law.</strong> V = I·R (voltage = current × resistance).</p>`
+  },
+  {
+    title: 'Safety golden rules', icon: '🦺',
+    html: `
+    <p>Safety questions reward the <strong>people-before-schedule</strong> mindset. Choose the answer that protects people first, every time.</p>
+    <ul>
+      <li><strong>Never assume isolation — always test for dead.</strong> Verify with a tester before touching.</li>
+      <li><strong>Lock-out / tag-out (LOTO):</strong> one lock per person; locks stay on until every worker removes their own.</li>
+      <li><strong>PPE is non-negotiable</strong> — the correct gear, every time, no "quick" exceptions.</li>
+      <li><strong>Stop-work authority:</strong> anyone can stop a job that is unsafe, regardless of rank.</li>
+      <li><strong>Report near-misses</strong> formally — they reveal hazards before someone is hurt.</li>
+      <li><strong>Hierarchy of control:</strong> eliminate → substitute → engineer → administrative → PPE (PPE is the last line).</li>
+      <li><strong>Working at heights:</strong> use a harness; remove and tag out any shock-loaded gear.</li>
+      <li><strong>Fatigue &amp; heat:</strong> recognise impairment and heat-stress signs; stop and get help.</li>
+      <li><strong>People before schedule:</strong> time pressure never justifies skipping a safety control.</li>
+      <li><strong>Dial before you dig:</strong> check plans, but treat any unexpected strike as live.</li>
+    </ul>`
+  }
+];
+
+function renderStudy() {
+  const el = document.getElementById('screen-study');
+  const sections = STUDY_CONTENT.map((s, i) => `
+    <details class="study-section"${i === 0 ? ' open' : ''}>
+      <summary>${s.icon} ${s.title}</summary>
+      <div class="study-body">${s.html}</div>
+    </details>`).join('');
+  el.innerHTML = `<div class="container" style="padding:2rem 1rem">
+    <h1>Study &amp; Reference Guide</h1>
+    <p style="color:var(--muted);margin-bottom:1.5rem">Everything you need to revise before the test. Tap a section to expand.</p>
+    ${sections}
+    <div style="margin-top:1.5rem">
+      <button class="btn btn-primary" onclick="renderHome();showScreen('screen-home')">Back to Home</button>
+    </div>
+  </div>`;
 }
 
 // ============================================================

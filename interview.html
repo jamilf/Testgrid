@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Interview Preparation — Bright Spark</title>
+<style>
+:root {
+  --bg:#f4f6f8; --surface:#fff; --surface-2:#f8fafc; --ink:#0f172a; --muted:#64748b;
+  --accent:#1d4ed8; --accent-soft:#eff6ff; --border:#e2e8f0;
+  --correct:#16a34a; --correct-soft:#f0fdf4; --warn:#d97706; --warn-soft:#fffbeb;
+  --radius:12px; --radius-sm:8px;
+  --shadow:0 1px 3px rgba(15,23,42,.08),0 1px 2px rgba(15,23,42,.04);
+  --shadow-lg:0 4px 12px rgba(15,23,42,.10);
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+html { -webkit-text-size-adjust:100%; }
+body {
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  background:var(--bg); color:var(--ink); font-size:16px; line-height:1.6;
+}
+a { color:var(--accent); text-decoration:none; }
+a:hover { text-decoration:underline; }
+
+/* Nav */
+.nav {
+  position:sticky; top:0; z-index:50;
+  display:flex; align-items:center; justify-content:space-between;
+  gap:1rem; padding:0.75rem 1.25rem;
+  background:var(--surface); border-bottom:1px solid var(--border); box-shadow:var(--shadow);
+}
+.nav-brand { font-weight:800; font-size:1.1rem; color:var(--ink); white-space:nowrap; }
+.nav-back {
+  display:inline-flex; align-items:center; gap:.35rem;
+  font-weight:600; font-size:.95rem; color:var(--accent);
+  padding:.4rem .6rem; border-radius:var(--radius-sm); min-height:40px;
+}
+.nav-back:hover { background:var(--accent-soft); text-decoration:none; }
+
+/* Layout */
+.wrap { max-width:760px; margin:0 auto; padding:1.25rem; }
+.hero { margin:1rem 0 1.5rem; }
+.hero h1 { font-size:2rem; font-weight:800; letter-spacing:-.01em; }
+.hero p.sub { color:var(--muted); font-size:1.05rem; margin-top:.25rem; }
+
+/* Tabs */
+.tabs {
+  display:flex; gap:.5rem; overflow-x:auto; -webkit-overflow-scrolling:touch;
+  padding-bottom:.5rem; margin-bottom:1.25rem;
+  scrollbar-width:thin;
+}
+.tab-btn {
+  flex:0 0 auto; cursor:pointer; font-size:.95rem; font-weight:600;
+  padding:.65rem 1rem; min-height:44px; white-space:nowrap;
+  border:1px solid var(--border); border-radius:999px;
+  background:var(--surface); color:var(--ink); box-shadow:var(--shadow);
+}
+.tab-btn:hover { border-color:var(--accent); }
+.tab-btn[aria-selected="true"] { background:var(--accent); color:#fff; border-color:var(--accent); }
+.tab-btn:focus-visible { outline:3px solid var(--accent); outline-offset:2px; }
+
+/* Sections */
+.section { display:none; }
+.section.active { display:block; }
+.intro {
+  background:var(--accent-soft); border:1px solid #dbeafe; border-left:4px solid var(--accent);
+  border-radius:var(--radius); padding:1rem 1.15rem; margin-bottom:1.25rem; color:var(--ink);
+}
+.intro strong { color:var(--accent); }
+.section-h { font-size:1.35rem; font-weight:800; margin:.25rem 0 1rem; }
+
+/* Cards (details) */
+details.card {
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  box-shadow:var(--shadow); margin-bottom:.85rem; overflow:hidden;
+}
+details.card[open] { box-shadow:var(--shadow-lg); }
+details.card > summary {
+  list-style:none; cursor:pointer; padding:1rem 1.15rem; min-height:48px;
+  font-weight:700; font-size:1.02rem; display:flex; align-items:flex-start; gap:.6rem;
+}
+details.card > summary::-webkit-details-marker { display:none; }
+details.card > summary:focus-visible { outline:3px solid var(--accent); outline-offset:-3px; }
+.chev {
+  flex:0 0 auto; width:1.3rem; height:1.3rem; margin-top:.15rem;
+  border-radius:50%; background:var(--accent-soft); color:var(--accent);
+  display:inline-flex; align-items:center; justify-content:center; font-size:.8rem; font-weight:800;
+  transition:transform .15s;
+}
+details.card[open] .chev { transform:rotate(90deg); }
+.card-body { padding:0 1.15rem 1.15rem; border-top:1px solid var(--border); margin-top:-.2rem; padding-top:1rem; }
+.label {
+  display:inline-block; font-size:.72rem; font-weight:800; letter-spacing:.06em;
+  text-transform:uppercase; color:var(--muted); margin:.85rem 0 .3rem;
+}
+.label.approach { color:var(--warn); }
+.label.answer { color:var(--correct); }
+.card-body p { margin-bottom:.5rem; }
+.card-body ul { margin:.25rem 0 .25rem 1.2rem; }
+.card-body li { margin-bottom:.35rem; }
+.sample {
+  background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-sm);
+  padding:.75rem .9rem; margin-top:.4rem; font-size:.97rem;
+}
+
+/* Worksheet */
+.ws-card {
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  box-shadow:var(--shadow); padding:1.25rem; margin-bottom:1rem;
+}
+.field { margin-bottom:1rem; }
+.field label { display:block; font-weight:700; margin-bottom:.35rem; }
+.field .hint { font-weight:400; color:var(--muted); font-size:.85rem; }
+select, textarea {
+  width:100%; font-family:inherit; font-size:1rem; color:var(--ink);
+  border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--surface);
+  padding:.7rem .8rem;
+}
+select:focus, textarea:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
+textarea { min-height:90px; resize:vertical; line-height:1.5; }
+.btn {
+  display:inline-flex; align-items:center; justify-content:center; gap:.4rem;
+  cursor:pointer; font-size:1rem; font-weight:700; min-height:48px;
+  padding:.7rem 1.3rem; border-radius:var(--radius-sm); border:1px solid transparent;
+}
+.btn-primary { background:var(--accent); color:#fff; }
+.btn-primary:hover { background:#1740b8; }
+.btn-ghost { background:var(--surface); color:var(--ink); border-color:var(--border); }
+.btn-ghost:hover { border-color:var(--accent); color:var(--accent); }
+.btn-row { display:flex; flex-wrap:wrap; gap:.6rem; align-items:center; margin-top:.5rem; }
+.saved-msg {
+  color:var(--correct); font-weight:700; font-size:.95rem;
+  opacity:0; transition:opacity .2s;
+}
+.saved-msg.show { opacity:1; }
+.ws-note { color:var(--muted); font-size:.9rem; margin-top:.75rem; }
+
+footer { color:var(--muted); font-size:.85rem; text-align:center; padding:2rem 1rem 3rem; }
+
+@media (max-width:560px) {
+  .wrap { padding:1rem; }
+  .hero h1 { font-size:1.55rem; }
+  .nav { padding:.6rem .9rem; }
+  .nav-brand { font-size:1rem; }
+  .nav-back { font-size:.85rem; padding:.35rem .45rem; }
+  .section-h { font-size:1.2rem; }
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <span class="nav-brand">⚡ Bright Spark</span>
+  <a class="nav-back" href="index.html">← Back to Simulator</a>
+</nav>
+
+<div class="wrap">
+  <header class="hero">
+    <h1>Interview Preparation</h1>
+    <p class="sub">Ausgrid Bright Spark apprenticeship — everything to prepare for the interview.</p>
+  </header>
+
+  <div class="tabs" role="tablist" aria-label="Interview preparation categories">
+    <button class="tab-btn" role="tab" id="tab-safety"      aria-controls="sec-safety"      onclick="showTab('safety')">Safety Culture</button>
+    <button class="tab-btn" role="tab" id="tab-why"         aria-controls="sec-why"         onclick="showTab('why')">Why Ausgrid / Motivation</button>
+    <button class="tab-btn" role="tab" id="tab-star"        aria-controls="sec-star"        onclick="showTab('star')">Behavioural (STAR)</button>
+    <button class="tab-btn" role="tab" id="tab-basics"      aria-controls="sec-basics"      onclick="showTab('basics')">Electrical Basics</button>
+    <button class="tab-btn" role="tab" id="tab-worksheet"   aria-controls="sec-worksheet"   onclick="showTab('worksheet')">STAR Worksheet</button>
+  </div>
+
+  <section class="section" id="sec-safety"   role="tabpanel" aria-labelledby="tab-safety"></section>
+  <section class="section" id="sec-why"      role="tabpanel" aria-labelledby="tab-why"></section>
+  <section class="section" id="sec-star"     role="tabpanel" aria-labelledby="tab-star"></section>
+  <section class="section" id="sec-basics"   role="tabpanel" aria-labelledby="tab-basics"></section>
+
+  <section class="section" id="sec-worksheet" role="tabpanel" aria-labelledby="tab-worksheet">
+    <h2 class="section-h">STAR Worksheet</h2>
+    <p style="color:var(--muted); margin-bottom:1rem;">Draft your own real stories using the STAR structure. Pick a scenario, write your answer, and hit Save — your drafts stay on this device (saved in your browser) and are kept when you reload, even fully offline.</p>
+    <div class="ws-card">
+      <div class="field">
+        <label for="ws-scenario">Scenario</label>
+        <select id="ws-scenario" onchange="loadDraft()">
+          <option value="teamwork">Teamwork — working well in a crew/team</option>
+          <option value="conflict">Conflict — a disagreement you resolved</option>
+          <option value="mistake">Mistake — an error and what you learned</option>
+          <option value="pressure">Pressure — working to a deadline / under stress</option>
+          <option value="safety">Safety — a time you acted on something unsafe</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="ws-s">Situation <span class="hint">— set the scene: where, when, who.</span></label>
+        <textarea id="ws-s" placeholder="Briefly describe the situation and context..."></textarea>
+      </div>
+      <div class="field">
+        <label for="ws-t">Task <span class="hint">— what was your responsibility or goal?</span></label>
+        <textarea id="ws-t" placeholder="What needed to be done, and what was your role?"></textarea>
+      </div>
+      <div class="field">
+        <label for="ws-a">Action <span class="hint">— what did YOU specifically do? (use "I")</span></label>
+        <textarea id="ws-a" placeholder="The steps you personally took..."></textarea>
+      </div>
+      <div class="field">
+        <label for="ws-r">Result <span class="hint">— the outcome + what you learned.</span></label>
+        <textarea id="ws-r" placeholder="What happened, the impact, and your takeaway..."></textarea>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="saveDraft()">Save</button>
+        <button class="btn btn-ghost" onclick="clearDraft()">Clear</button>
+        <span class="saved-msg" id="ws-saved">Saved ✓</span>
+      </div>
+      <p class="ws-note">Tip: keep Action focused on what <em>you</em> did, and always finish with a clear Result.</p>
+    </div>
+  </section>
+
+  <footer>
+    Practice out loud and time yourself. Lead with safety, be specific, and bring real examples. Good luck. ⚡
+  </footer>
+</div>
+
+<script>
+/* ---------- Content data ---------- */
+var INTERVIEW_CONTENT = {
+  safety: {
+    heading: "Safety Culture",
+    intro: "Ausgrid runs a high-voltage electricity distribution network, so a <strong>safety-first attitude is the single most important thing they screen for</strong> in this interview. Whatever the question, show you put <strong>people before schedule</strong>, that you follow procedures, and that you'll always <strong>stop and ask if in doubt</strong>. Strong answers show you'll speak up, never cut corners, and look out for your crew.",
+    items: [
+      {
+        q: "Tell me about a time you noticed something unsafe. What did you do?",
+        approach: "Use the STAR structure. Show that you acted straight away rather than ignoring it, that you spoke up, and that reporting felt natural to you — not something you had to be told to do.",
+        points: [
+          "<strong>Situation/Task:</strong> describe the hazard and where you spotted it.",
+          "<strong>Action:</strong> stopped or paused the activity, warned anyone at risk, and reported it to the right person.",
+          "<strong>Result:</strong> the hazard was fixed and no one was hurt; you'd do the same again.",
+          "Key message: I'd rather raise something small than risk an injury."
+        ]
+      },
+      {
+        q: "What would you do if a supervisor asked you to skip a safety step to save time?",
+        approach: "They want to see that you'll respectfully push back, even with someone senior. Schedule never beats safety. Stay calm and professional — it's about the task, not the person.",
+        points: [
+          "Politely decline to skip the step and explain why the procedure exists.",
+          "Offer to do it properly: 'I can do this safely, it only takes a moment.'",
+          "If pressured, escalate to a safety officer or higher supervisor rather than comply.",
+          "Bottom line: no deadline is worth someone getting hurt — procedures protect everyone."
+        ]
+      },
+      {
+        q: "What does 'stop-work authority' mean to you?",
+        approach: "Show you understand it's a right and a responsibility everyone on site has — not just managers — and that using it is encouraged, not punished.",
+        points: [
+          "Anyone can stop a job if they believe it's unsafe, regardless of rank.",
+          "There's no blame for stopping work — it's seen as the right call.",
+          "Work only restarts once the hazard is controlled and people are confident.",
+          "It empowers the most junior person on site to protect themselves and others."
+        ]
+      },
+      {
+        q: "How would you handle seeing a workmate not wearing required PPE?",
+        approach: "Show tact and teamwork — you look out for mates without being preachy, and you lead by example. It's care, not criticism.",
+        points: [
+          "Have a quiet, friendly word first: 'Mate, you're missing your gloves/glasses.'",
+          "Often that's all it takes — people make honest slips.",
+          "If it continues or the risk is serious, report it so it gets addressed.",
+          "Always set the standard by wearing my own PPE correctly every time."
+        ]
+      },
+      {
+        q: "Why is reporting near-misses important even when no one was hurt?",
+        approach: "Demonstrate that you think about preventing the next incident, not just reacting to injuries. Near-misses are free lessons.",
+        points: [
+          "A near-miss reveals a hazard <em>before</em> it actually hurts someone.",
+          "Reporting builds data that helps fix the root cause across the whole network.",
+          "Today's near-miss could be tomorrow's serious injury if ignored.",
+          "A good safety culture treats reporting as positive, not as 'dobbing'."
+        ]
+      },
+      {
+        q: "What does electrical safety mean to you / what do you know about working safely around electricity?",
+        approach: "You're an apprentice, so you're not expected to know everything — but show solid awareness of the basics and a healthy respect for electricity. Mention testing for dead and isolation.",
+        points: [
+          "Never assume a circuit is isolated — always test for dead before touching it.",
+          "Use lock-out / tag-out (LOTO) so a circuit can't be re-energised while you work.",
+          "Keep safe clearances from live conductors and overhead lines.",
+          "Use insulated, tested tools and the correct PPE.",
+          "Treat every conductor as live until proven dead — electricity gives no second chances."
+        ]
+      },
+      {
+        q: "How do you stay safe when you're tired or under pressure?",
+        approach: "Show self-awareness and honesty. Fatigue and rushing cause mistakes; the safe worker recognises this and manages it rather than powering through.",
+        points: [
+          "Recognise the signs of fatigue in myself and speak up about it.",
+          "Take breaks, stay hydrated, and don't rush the final job of the day.",
+          "Ask for help or a second set of eyes on tricky tasks rather than guessing.",
+          "Never cut corners to catch up — slow is smooth, smooth is safe."
+        ]
+      }
+    ]
+  },
+
+  why: {
+    heading: "Why Ausgrid / Motivation",
+    intro: "These questions test whether you genuinely want <em>this</em> apprenticeship and have done your homework. Be specific, show real research, and link <strong>your</strong> values to <strong>theirs</strong>: safety, community, reliability and the energy transition. Avoid generic answers like 'I just need a job.'",
+    items: [
+      {
+        q: "Why do you want this apprenticeship?",
+        approach: "Connect your personal motivation to what Ausgrid actually does. Show it's a deliberate choice, not a fallback.",
+        points: [
+          "You want a hands-on trade with real responsibility and lifelong skills.",
+          "You're drawn to keeping the lights on for the community — meaningful, essential work.",
+          "Ausgrid's structured apprenticeship and safety standards are exactly the start you want.",
+          "Make it personal: a mentor, a project, or an interest in electricity that sparked it."
+        ]
+      },
+      {
+        q: "Why a trade / why electrical?",
+        approach: "Show you understand and value trade work, and that electrical specifically appeals to you — problem-solving, variety, working with your hands and your head.",
+        points: [
+          "You enjoy practical problem-solving and seeing tangible results.",
+          "Electrical work is varied — no two days the same — and always in demand.",
+          "You like the mix of physical work outdoors and technical thinking.",
+          "A trade offers a clear, respected career path and the chance to keep growing."
+        ]
+      },
+      {
+        q: "What do you know about Ausgrid?",
+        approach: "This directly tests your research. Have a few accurate facts ready and say them confidently — then tie them to why you want to join.",
+        points: [
+          "Ausgrid operates one of Australia's largest electricity distribution networks.",
+          "It delivers power to around <strong>1.8 million customers</strong> across <strong>Sydney, the Central Coast and the Hunter region</strong> in NSW.",
+          "It maintains the poles, wires, substations and the wider network.",
+          "Strong focus on <strong>safety, reliability and the energy transition</strong> (more renewables, EVs, batteries).",
+          "Tie-in: 'That mix of essential service and a changing energy future is exactly where I want to build my career.'"
+        ]
+      },
+      {
+        q: "Where do you see yourself in 5 years?",
+        approach: "Show commitment and ambition without sounding like you'll leave. Picture yourself qualified and contributing.",
+        points: [
+          "Finished the apprenticeship and working as a qualified, trusted tradesperson.",
+          "Confident and safe on the tools, maybe starting to mentor newer apprentices.",
+          "Keen to keep learning new areas of the network as technology changes.",
+          "Still at Ausgrid, building a long-term career — not just passing through."
+        ]
+      },
+      {
+        q: "Are you prepared for a multi-year apprenticeship with study (TAFE) alongside work?",
+        approach: "Reassure them you understand the commitment and can balance work and study. Give evidence you can manage both.",
+        points: [
+          "Yes — I know it's several years of work plus TAFE study, and I'm committed.",
+          "I've balanced commitments before (give an example: job + study, sport + school).",
+          "I'm organised and will keep on top of coursework so it supports my on-job learning.",
+          "I see the study as a key part of becoming genuinely skilled, not a chore."
+        ]
+      },
+      {
+        q: "What makes you a good fit for working outdoors, in a crew, in all weather?",
+        approach: "Show you know the job is physical, outdoors and team-based, and that this suits you. Back it with examples.",
+        points: [
+          "I'm comfortable with physical, outdoor work and don't mind tough conditions.",
+          "I work well in a team — reliable, pull my weight, and communicate clearly.",
+          "Example: a job, sport or volunteering where you worked hard in a crew/outdoors.",
+          "I turn up on time, ready to go, and look out for the people I work with."
+        ]
+      }
+    ]
+  },
+
+  star: {
+    heading: "Behavioural (STAR)",
+    intro: "Behavioural questions ask for real examples from your past — interviewers believe past behaviour predicts future behaviour. The <strong>STAR method</strong> keeps your answers clear and complete. Prepare 4–5 solid stories you can adapt to almost any question.",
+    items: [
+      {
+        q: "The STAR method — how to structure any behavioural answer",
+        approach: "STAR gives your story a beginning, middle and end so you don't ramble. Spend most of your time on Action and Result — that's what shows your contribution.",
+        points: [
+          "<strong>S — Situation:</strong> set the scene briefly (where, when, who).",
+          "<strong>T — Task:</strong> what you needed to achieve or your responsibility.",
+          "<strong>A — Action:</strong> the specific steps <em>you</em> took (say 'I', not 'we').",
+          "<strong>R — Result:</strong> the outcome, ideally measurable, plus what you learned.",
+          "<strong>Worked example (teamwork):</strong> <em>Situation</em> — In my part-time job our team was short-staffed on a busy weekend. <em>Task</em> — We still had to serve customers quickly and keep the area tidy. <em>Action</em> — I suggested we split the roles, I took the busiest station, and I kept checking if anyone needed a hand. <em>Result</em> — We got through the rush with no complaints, my manager thanked the team, and I learned how much smoother things go when everyone communicates."
+        ]
+      },
+      {
+        q: "Tell me about a time you worked in a team.",
+        approach: "Pick a story where the team succeeded partly because of your contribution. Show cooperation and communication.",
+        points: [
+          "<strong>S:</strong> a group project, job, sport or volunteering task.",
+          "<strong>T:</strong> the shared goal and what was at stake.",
+          "<strong>A:</strong> how you cooperated, communicated and supported teammates.",
+          "<strong>R:</strong> the team achieved the goal; note what you learned about teamwork."
+        ]
+      },
+      {
+        q: "Describe a conflict or disagreement and how you resolved it.",
+        approach: "Choose a disagreement you handled maturely. Focus on listening and finding a solution, not on 'winning'. Stay respectful about the other person.",
+        points: [
+          "<strong>S:</strong> a genuine disagreement (a teammate, a customer, a family/sport situation).",
+          "<strong>T:</strong> the need to sort it out and keep things working.",
+          "<strong>A:</strong> stayed calm, listened to their view, found common ground / compromise.",
+          "<strong>R:</strong> the issue was resolved and the relationship stayed positive."
+        ]
+      },
+      {
+        q: "Tell me about a mistake you made and what you learned.",
+        approach: "Be honest — everyone makes mistakes. They want to see you take responsibility, fix it, and grow. Don't blame others, and end on the lesson.",
+        points: [
+          "<strong>S/T:</strong> the situation and what you got wrong.",
+          "<strong>A:</strong> owned up to it, told the right person, and put it right.",
+          "<strong>R:</strong> the outcome plus the concrete lesson and how you've changed since.",
+          "Tie-in: in this trade, owning up to a mistake quickly can prevent it becoming a safety issue."
+        ]
+      },
+      {
+        q: "Give an example of working under pressure / to a deadline.",
+        approach: "Show you stay calm, prioritise, and still produce quality work under pressure — without cutting safety corners.",
+        points: [
+          "<strong>S:</strong> a tight deadline, busy shift or exam crunch.",
+          "<strong>T:</strong> what had to be done and by when.",
+          "<strong>A:</strong> prioritised tasks, stayed focused, asked for help where sensible.",
+          "<strong>R:</strong> met the deadline with the quality intact; note your coping strategy."
+        ]
+      },
+      {
+        q: "Describe a time you went above and beyond.",
+        approach: "Pick a moment you did more than the minimum because you cared about doing it right or helping someone.",
+        points: [
+          "<strong>S/T:</strong> the situation and what was expected of you.",
+          "<strong>A:</strong> the extra effort you chose to put in and why.",
+          "<strong>R:</strong> the positive impact for the customer, team or task.",
+          "Shows initiative and a strong work ethic — both prized in apprentices."
+        ]
+      },
+      {
+        q: "Tell me about a time you had to learn something quickly.",
+        approach: "Apprenticeships are all about learning. Show you're a fast, willing learner who isn't afraid to ask questions.",
+        points: [
+          "<strong>S/T:</strong> a new skill, tool or task you had little time to master.",
+          "<strong>A:</strong> watched/asked others, practised, took notes, checked your work.",
+          "<strong>R:</strong> you picked it up and applied it successfully.",
+          "Message: I learn quickly, ask good questions, and put feedback into action."
+        ]
+      }
+    ]
+  },
+
+  basics: {
+    heading: "Electrical Basics",
+    intro: "You're not expected to be an electrician yet — these basics are to <strong>build your confidence</strong> and show you have a genuine interest. Keep explanations simple, accurate, and don't be afraid to use everyday analogies in the interview.",
+    items: [
+      {
+        q: "Voltage, current, resistance and Ohm's law (V = I × R)",
+        approach: "Use the water-in-a-pipe analogy — it's clear and shows you really understand the concepts.",
+        points: [
+          "<strong>Voltage (V)</strong> = the 'push' or pressure driving electricity — like water pressure in a pipe.",
+          "<strong>Current (I)</strong> = the flow of electricity — like the amount of water flowing.",
+          "<strong>Resistance (R)</strong> = how much the wire/component opposes the flow — like a narrow pipe.",
+          "<strong>Ohm's law: V = I × R.</strong> More voltage pushes more current; more resistance reduces it.",
+          "You can rearrange it: I = V ÷ R, and R = V ÷ I."
+        ]
+      },
+      {
+        q: "AC vs DC — what each is and where it's used",
+        approach: "Define both simply and give a familiar example of each.",
+        points: [
+          "<strong>AC (Alternating Current):</strong> the flow reverses direction many times a second. Used for mains power and the grid (Ausgrid's network is AC).",
+          "<strong>DC (Direct Current):</strong> flows steadily in one direction. Used by batteries, solar panels and electronics.",
+          "AC is easy to step up/down with transformers, which is why it's used to send power long distances.",
+          "Many devices convert AC from the wall into DC inside (e.g. phone chargers)."
+        ]
+      },
+      {
+        q: "Series vs parallel circuits — and what happens when one part fails",
+        approach: "Explain the difference and the practical consequence of a failure in each.",
+        points: [
+          "<strong>Series:</strong> components are in one single loop. If one fails or breaks, the whole circuit stops (like old Christmas lights).",
+          "<strong>Parallel:</strong> components are on separate branches. If one fails, the others keep working (like house powerpoints).",
+          "Series shares the same current; parallel shares the same voltage.",
+          "Homes are wired largely in parallel so one blown bulb doesn't kill the lot."
+        ]
+      },
+      {
+        q: "Isolation & testing for dead — why you never assume a circuit is off",
+        approach: "This is safety-critical knowledge — link it back to the safety culture theme.",
+        points: [
+          "<strong>Isolation</strong> means switching off and securing the supply so a circuit can't be energised.",
+          "Use <strong>lock-out / tag-out (LOTO)</strong> so no one can switch it back on while you work.",
+          "<strong>Test for dead</strong> with a proven voltage tester before touching conductors — and prove the tester works before and after.",
+          "Never trust a label or a switch position alone: 'test before touch', every time.",
+          "Treat every conductor as live until you've proven it dead."
+        ]
+      },
+      {
+        q: "Common hand tools an electrician uses",
+        approach: "Name a few tools and say what each is for — shows familiarity with the trade.",
+        points: [
+          "<strong>Screwdrivers</strong> (insulated, flat & Phillips) — driving screws and terminals.",
+          "<strong>Pliers (combination):</strong> gripping, bending and cutting wire.",
+          "<strong>Side cutters:</strong> cutting cable and wire cleanly.",
+          "<strong>Wire strippers / crimpers:</strong> removing insulation and crimping connectors onto wires.",
+          "<strong>Multimeter:</strong> measures voltage, current and resistance.",
+          "<strong>Voltage tester:</strong> confirms whether a circuit is live or dead."
+        ]
+      },
+      {
+        q: "Electrical units — and Power (P = V × I)",
+        approach: "Know the units and their symbols, plus the basic power formula.",
+        points: [
+          "<strong>Volts (V)</strong> — voltage (the push).",
+          "<strong>Amps (A)</strong> — current (the flow).",
+          "<strong>Ohms (Ω)</strong> — resistance (the opposition).",
+          "<strong>Watts (W)</strong> — power (the rate energy is used).",
+          "<strong>Power: P = V × I</strong> (watts = volts × amps)."
+        ]
+      },
+      {
+        q: "Three-phase vs single-phase (brief, plain English)",
+        approach: "Keep it simple — you just need the gist.",
+        points: [
+          "<strong>Single-phase:</strong> one live supply, used for most homes and small appliances.",
+          "<strong>Three-phase:</strong> three live supplies working together, delivering more power smoothly.",
+          "Three-phase suits big motors, industrial gear and larger buildings.",
+          "The distribution network uses three-phase to move large amounts of power efficiently."
+        ]
+      },
+      {
+        q: "What a substation / transformer does",
+        approach: "Explain the 'step up / step down' idea — central to a distribution network.",
+        points: [
+          "A <strong>transformer</strong> changes voltage up or down (it only works on AC).",
+          "Power is sent at <strong>high voltage</strong> over distance because that's more efficient (less loss).",
+          "A <strong>substation</strong> houses transformers and switchgear to step voltage <strong>down</strong> to safer, usable levels for homes and businesses.",
+          "So electricity goes: generation → high-voltage transmission → substations step it down → poles & wires → your home."
+        ]
+      }
+    ]
+  }
+};
+
+/* ---------- Rendering ---------- */
+function esc(s){ return s; } // content is trusted/author-controlled
+
+function renderSection(key){
+  var data = INTERVIEW_CONTENT[key];
+  var el = document.getElementById('sec-' + key);
+  var html = '<h2 class="section-h">' + data.heading + '</h2>';
+  html += '<div class="intro">' + data.intro + '</div>';
+  data.items.forEach(function(item){
+    html += '<details class="card">';
+    html += '<summary><span class="chev">&#8250;</span><span>' + item.q + '</span></summary>';
+    html += '<div class="card-body">';
+    html += '<div class="label approach">How to approach it</div>';
+    html += '<p>' + item.approach + '</p>';
+    html += '<div class="label answer">Model answer / key points</div>';
+    html += '<ul>';
+    item.points.forEach(function(p){ html += '<li>' + p + '</li>'; });
+    html += '</ul>';
+    html += '</div></details>';
+  });
+  el.innerHTML = html;
+}
+
+['safety','why','star','basics'].forEach(renderSection);
+
+/* ---------- Tabs ---------- */
+var TAB_IDS = ['safety','why','star','basics','worksheet'];
+function showTab(id){
+  TAB_IDS.forEach(function(t){
+    var sec = document.getElementById('sec-' + t);
+    var btn = document.getElementById('tab-' + t);
+    var on = (t === id);
+    if(sec) sec.classList.toggle('active', on);
+    if(btn){
+      btn.setAttribute('aria-selected', on ? 'true' : 'false');
+      btn.tabIndex = on ? 0 : -1;
+    }
+  });
+  if(id === 'worksheet') loadDraft();
+}
+
+/* Keyboard navigation across tabs */
+(function(){
+  var btns = TAB_IDS.map(function(t){ return document.getElementById('tab-' + t); });
+  btns.forEach(function(btn, i){
+    btn.addEventListener('keydown', function(e){
+      var next = null;
+      if(e.key === 'ArrowRight') next = (i + 1) % btns.length;
+      else if(e.key === 'ArrowLeft') next = (i - 1 + btns.length) % btns.length;
+      else if(e.key === 'Home') next = 0;
+      else if(e.key === 'End') next = btns.length - 1;
+      if(next !== null){
+        e.preventDefault();
+        btns[next].focus();
+        showTab(TAB_IDS[next]);
+      }
+    });
+  });
+})();
+
+/* ---------- STAR Worksheet (localStorage) ---------- */
+var WS_KEY = 'brightspark_star';
+
+function readStore(){
+  try { return JSON.parse(localStorage.getItem(WS_KEY) || '{}'); }
+  catch(e){ return {}; }
+}
+function writeStore(obj){
+  try { localStorage.setItem(WS_KEY, JSON.stringify(obj)); return true; }
+  catch(e){ return false; }
+}
+function currentScenario(){ return document.getElementById('ws-scenario').value; }
+
+function loadDraft(){
+  var store = readStore();
+  var d = store[currentScenario()] || {};
+  document.getElementById('ws-s').value = d.s || '';
+  document.getElementById('ws-t').value = d.t || '';
+  document.getElementById('ws-a').value = d.a || '';
+  document.getElementById('ws-r').value = d.r || '';
+}
+
+function saveDraft(){
+  var store = readStore();
+  store[currentScenario()] = {
+    s: document.getElementById('ws-s').value,
+    t: document.getElementById('ws-t').value,
+    a: document.getElementById('ws-a').value,
+    r: document.getElementById('ws-r').value
+  };
+  writeStore(store);
+  flashSaved();
+}
+
+function clearDraft(){
+  document.getElementById('ws-s').value = '';
+  document.getElementById('ws-t').value = '';
+  document.getElementById('ws-a').value = '';
+  document.getElementById('ws-r').value = '';
+  var store = readStore();
+  delete store[currentScenario()];
+  writeStore(store);
+}
+
+var savedTimer = null;
+function flashSaved(){
+  var el = document.getElementById('ws-saved');
+  el.classList.add('show');
+  if(savedTimer) clearTimeout(savedTimer);
+  savedTimer = setTimeout(function(){ el.classList.remove('show'); }, 1800);
+}
+
+/* ---------- Init ---------- */
+showTab('safety');
+loadDraft();
+</script>
+</body>
+</html>
